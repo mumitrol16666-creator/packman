@@ -1,0 +1,51 @@
+# Проверка образа для сервера: сборка, запуск, первая публикация сайта в примонтированную папку.
+name: Docker image
+
+on:
+  push:
+    branches: [main]
+    paths: ['Dockerfile', 'docker-compose.yml', '.dockerignore', 'package*.json', 'server/**', 'src/**', 'scripts/**', 'astro.config.mjs', '.github/workflows/docker.yml']
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build image
+        run: docker build -t pacman-site:ci .
+      - name: Run the container the way the server does
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          sudo chown 1000:1000 "$RUNNER_TEMP/site"
+          docker run -d --name pacman -p 127.0.0.1:8787:8787 \
+            -e ADMIN_PASSWORD=ci-only-password -e PUBLIC_TRACK_URL=/api/track -e SITE_URL=http://127.0.0.1 -e PUBLIC_NOINDEX=1 \
+            -e SITE_DIR=/app/dist -e SERVE_SITE=1 \
+            -v "$RUNNER_TEMP/site:/app/dist" \
+            -v pacman-content:/app/src/data -v pacman-photos:/app/src/assets/photos -v pacman-events:/app/src/assets/events -v pacman-data:/app/data \
+            pacman-site:ci
+          for i in $(seq 1 90); do [ -f "$RUNNER_TEMP/site/index.html" ] && break; sleep 2; done
+          docker logs pacman | tail -20
+      - name: Check the published site, the API and the admin
+        run: |
+          test -f "$RUNNER_TEMP/site/index.html"
+          test -f "$RUNNER_TEMP/site/kz/index.html"
+          test -f "$RUNNER_TEMP/site/clubs/gold/index.html"
+          test -f "$RUNNER_TEMP/site/og/home.jpg"
+          grep -q 'noindex' "$RUNNER_TEMP/site/index.html"
+          curl -fsS http://127.0.0.1:8787/api/health
+          curl -fsS -o /dev/null http://127.0.0.1:8787/admin/
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8787/admin/api/content)" = "401"
+          curl -fsS http://127.0.0.1:8787/ | grep -q 'Pacman Game Center'
+      - name: Edit a price through the admin API and check it gets published
+        run: |
+          curl -fsS -c cookies.txt -X POST -H 'X-Pacman-Admin: 1' -d '{"password":"ci-only-password"}' http://127.0.0.1:8787/admin/api/login
+          curl -fsS -b cookies.txt http://127.0.0.1:8787/admin/api/content | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['branches']
+          d[3]['zones'][1]['prices']['h1']=654
+          json.dump(d,open('branches.json','w'),ensure_ascii=False)"
+          curl -fsS -b cookies.txt -X PUT -H 'X-Pacman-Admin: 1' -H 'Content-Type: application/json' --data-binary @branches.json http://127.0.0.1:8787/admin/api/content/branches > /dev/null
+          for i in $(seq 1 40); do grep -q '654<span' "$RUNNER_TEMP/site/clubs/batys/index.html" && break; sleep 2; done
+          grep -q '654<span' "$RUNNER_TEMP/site/clubs/batys/index.html"
+          docker logs pacman | tail -5

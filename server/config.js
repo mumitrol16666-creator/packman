@@ -13,6 +13,7 @@ export function loadConfig(env = process.env) {
     dataDir: dbPath === ':memory:' ? resolve('./data') : dirname(resolve(dbPath)),
     adminPassword: env.ADMIN_PASSWORD || '',
     serveSite: env.SERVE_SITE === '1',
+    buildOnStart: env.BUILD_ON_START === '1',
     port: Number(env.PORT) || 8787,
     dbPath,
     timezone: env.TIMEZONE || 'Asia/Aqtobe',

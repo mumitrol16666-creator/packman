@@ -112,6 +112,10 @@ server.listen(config.port, () => {
   console.log(`[pacman-analytics] слушает порт ${config.port}, база ${config.dbPath}, часовой пояс ${config.timezone}`);
   console.log(admin ? '[pacman-analytics] админка включена: /admin/' : '[pacman-analytics] ADMIN_PASSWORD не задан: админка выключена');
   if (!config.botToken || !config.reportChat) console.log('[pacman-analytics] TG_BOT_TOKEN или TG_REPORT_CHAT_ID не заданы: события пишутся, отчёты не отправляются');
+  if (config.buildOnStart) {
+    if (admin) admin.buildNow();
+    else console.log('[pacman-analytics] BUILD_ON_START задан, но без ADMIN_PASSWORD сборка не запускается');
+  }
   tick();
   setInterval(tick, 5 * 60 * 1000).unref();
 });

@@ -1,0 +1,36 @@
+# Выкладка на сервер: см. deploy/install.sh и раздел «Выкладка на сервер» в README.
+name: pacman
+
+services:
+  pacman:
+    build: .
+    image: pacman-site:latest
+    container_name: pacman
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # внутри контейнера сайт всегда публикуется сюда; папка на сервере задаётся ниже, в volumes
+      SITE_DIR: /app/dist
+    # Порт открыт только самому серверу: наружу сайт и админку отдаёт nginx.
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      # правки маркетологов живут в томах и переживают обновление кода
+      - pacman-content:/app/src/data
+      - pacman-photos:/app/src/assets/photos
+      - pacman-events:/app/src/assets/events
+      - pacman-data:/app/data
+      # собранный сайт лежит на диске сервера: nginx отдаёт его сам, даже если контейнер остановлен
+      - ${HOST_SITE_DIR:-/var/www/pacman}:/app/dist
+    mem_limit: 1g
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pacman-content:
+  pacman-photos:
+  pacman-events:
+  pacman-data:

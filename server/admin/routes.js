@@ -79,7 +79,7 @@ export function createAdmin({ db, config, clientIp }) {
     return { data: result.data };
   }
 
-  return async function handle(req, res, path) {
+  async function handle(req, res, path) {
     if (path !== '/admin' && !path.startsWith('/admin/')) return false;
     if (path === '/admin') {
       res.writeHead(302, { Location: '/admin/' }).end();
@@ -172,5 +172,9 @@ export function createAdmin({ db, config, clientIp }) {
       console.error('[admin]', error);
       return send(res, 500, { error: 'Внутренняя ошибка. Подробности в журнале сервера.' }), true;
     }
-  };
+  }
+
+  /** Сборка при старте контейнера: сайт на диске должен соответствовать контенту из томов, а не образу. */
+  handle.buildNow = () => builder.request({ photosChanged: true });
+  return handle;
 }
