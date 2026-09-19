@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import Icon from './Icon.astro';
-import { formatPrice, maxHz, minHourPrice, photosOf } from '../lib/data.js';
+import { formatPrice, maxHz, minHourPrice, photosOf, ratingCount, ratingValue, reviewsUrl } from '../lib/data.js';
 import { url } from '../lib/url.js';
 
 interface Props {
@@ -14,7 +14,7 @@ const topHz = Math.max(...branch.zones.map(maxHz));
 const hasPs = branch.consoles.length > 0;
 ---
 
-<article class="club" style={`--accent:${branch.accent}`}>
+<article class="club" style={`--accent:${branch.accent}`} data-club={branch.slug} data-lat={branch.geo?.lat} data-lon={branch.geo?.lon}>
   <a class="club__media" href={url(`/clubs/${branch.slug}/`)} tabindex="-1" aria-hidden="true">
     {cover ? (
       <Image
@@ -36,7 +36,14 @@ const hasPs = branch.consoles.length > 0;
       <span class="club__from">от <b class="num">{formatPrice(minHourPrice(branch))}</b> ₸/час</span>
     </div>
 
-    <p class="club__address"><Icon name="pin" />{branch.address}<span>{branch.district}</span></p>
+    <p class="club__address"><Icon name="pin" />{branch.address}<span>{branch.district}<b class="club__distance" hidden></b></span></p>
+
+    {branch.rating && (
+      <a class="club__rating" href={reviewsUrl(branch)} target="_blank" rel="noopener" data-track="reviews_2gis" data-branch={branch.slug}>
+        <span class="club__star" aria-hidden="true">★</span><b>{ratingValue(branch.rating.value)}</b>
+        <span>{ratingCount(branch.rating.count)} в 2ГИС</span>
+      </a>
+    )}
 
     <div class="club__chips">
       <span class="chip chip--accent">до {topHz} Гц</span>
@@ -161,6 +168,41 @@ const hasPs = branch.consoles.length > 0;
     grid-column: 2;
     font-size: 13px;
     color: var(--muted);
+  }
+
+  .club__distance {
+    margin-left: 8px;
+    color: var(--accent-text);
+    font-weight: 600;
+  }
+
+  .club__distance[hidden] {
+    display: none;
+  }
+
+  .club__rating {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    align-self: flex-start;
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .club__rating:hover span:last-child {
+    text-decoration: underline;
+  }
+
+  .club__rating b {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--snow);
+  }
+
+  .club__star {
+    color: var(--yellow);
+    font-size: 15px;
   }
 
   .club__chips {

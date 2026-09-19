@@ -19,6 +19,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 const isHome = Astro.url.pathname === url('/');
 const home = isHome ? '' : url('/');
 const noindex = Boolean(import.meta.env.PUBLIC_NOINDEX);
+const metrikaId = Number(import.meta.env.PUBLIC_METRIKA_ID) || null;
 ---
 
 <!doctype html>
@@ -44,6 +45,16 @@ const noindex = Boolean(import.meta.env.PUBLIC_NOINDEX);
     <link rel="icon" href={url('/favicon.png')} type="image/png" />
     <link rel="apple-touch-icon" href={url('/favicon.png')} />
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {metrikaId && (
+      <script is:inline define:vars={{ metrikaId }}>
+        (function (m, e, t, r, i, k, a) {
+          m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); };
+          m[i].l = 1 * new Date();
+          k = e.createElement(t); a = e.getElementsByTagName(t)[0]; k.async = 1; k.src = r; a.parentNode.insertBefore(k, a);
+        })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
+        ym(metrikaId, 'init', { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true });
+      </script>
+    )}
   </head>
   <body>
     <header class="header">
@@ -57,7 +68,26 @@ const noindex = Boolean(import.meta.env.PUBLIC_NOINDEX);
           <a href={`${home}#promos`}>Акции</a>
           <a href={`${home}#rules`}>Правила</a>
         </nav>
-        <a class="btn btn--sm btn--primary" href="#booking" data-book data-track="header_book">Забронировать</a>
+        <div class="header__right">
+          <a class="btn btn--sm btn--primary" href="#booking" data-book data-track="header_book">Забронировать</a>
+          <details class="menu" id="menu">
+            <summary aria-label="Меню"><span aria-hidden="true"></span></summary>
+            <nav class="menu__panel" aria-label="Меню">
+              <div class="wrap">
+                <a href={`${home}#clubs`}>Клубы</a>
+                <a href={`${home}#prices`}>Цены</a>
+                <a href={`${home}#promos`}>Акции</a>
+                <a href="#booking" data-book>Бронь</a>
+                <a href={`${home}#rules`}>Правила</a>
+                <ul class="menu__clubs">
+                  {branches.map((b) => (
+                    <li><a href={url(`/clubs/${b.slug}/`)} style={`--accent:${b.accent}`}>{b.name}</a></li>
+                  ))}
+                </ul>
+              </div>
+            </nav>
+          </details>
+        </div>
       </div>
     </header>
 
@@ -83,15 +113,29 @@ const noindex = Boolean(import.meta.env.PUBLIC_NOINDEX);
       </div>
       <div class="wrap footer__legal">
         <span>© {new Date().getFullYear()} {site.brand}, {site.city}</span>
-        <span>Все клубы работают круглосуточно</span>
+        <a href={url('/privacy/')}>Какие данные собирает сайт</a>
       </div>
     </footer>
 
     <script>
-      import { trackClicks, track } from '../lib/track.js';
+      import { track, trackClicks, trackEngagement, trackSections } from '../lib/track.js';
 
+      track('pageview');
       trackClicks();
-      track('pageview', { referrer: document.referrer || null });
+      trackSections();
+      trackEngagement();
+
+      // мобильное меню закрывается после перехода, по клику мимо и по Escape
+      const menu = document.getElementById('menu') as HTMLDetailsElement;
+      menu.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('a')) menu.open = false;
+      });
+      document.addEventListener('click', (e) => {
+        if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') menu.open = false;
+      });
 
       // подсветка пакетов, которые действуют прямо сейчас по времени Актобе
       function markCurrentPackages() {
@@ -132,7 +176,126 @@ const noindex = Boolean(import.meta.env.PUBLIC_NOINDEX);
   }
 
   .header__logo img {
-    width: 132px;
+    width: 120px;
+  }
+
+  .header__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .menu summary {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 38px;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu summary span,
+  .menu summary span::before,
+  .menu summary span::after {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--snow);
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+
+  .menu summary span {
+    position: relative;
+  }
+
+  .menu summary span::before,
+  .menu summary span::after {
+    content: '';
+    position: absolute;
+    left: 0;
+  }
+
+  .menu summary span::before {
+    top: -6px;
+  }
+
+  .menu summary span::after {
+    top: 6px;
+  }
+
+  .menu[open] summary span {
+    background: transparent;
+  }
+
+  .menu[open] summary span::before {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .menu[open] summary span::after {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .menu__panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding-block: 8px 20px;
+    background: var(--carbon);
+    border-bottom: 1px solid var(--line);
+    max-height: calc(100vh - var(--header-h));
+    overflow-y: auto;
+  }
+
+  .menu__panel .wrap > a {
+    display: block;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .menu__clubs {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .menu__clubs a {
+    display: block;
+    padding: 10px 8px;
+    border: 1px solid var(--line);
+    border-bottom: 2px solid var(--accent);
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  @media (max-width: 359px) {
+    .header__logo img {
+      width: 100px;
+    }
+    .header__right .btn {
+      padding: 0 10px;
+    }
   }
 
   .header__nav {
@@ -156,6 +319,9 @@ const noindex = Boolean(import.meta.env.PUBLIC_NOINDEX);
   }
 
   @media (min-width: 800px) {
+    .menu {
+      display: none;
+    }
     .header__nav {
       display: flex;
     }
@@ -221,6 +387,14 @@ const noindex = Boolean(import.meta.env.PUBLIC_NOINDEX);
 
   .footer__clubs span {
     color: var(--muted);
+  }
+
+  .footer__legal a {
+    color: var(--muted);
+  }
+
+  .footer__legal a:hover {
+    color: var(--snow);
   }
 
   .footer__legal {

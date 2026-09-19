@@ -1,5 +1,6 @@
 import branches from '../data/branches.json';
 import site from '../data/site.json';
+import { plural } from './booking.js';
 
 export { branches, site };
 
@@ -25,6 +26,26 @@ export function minHourPrice(branch) {
 export function maxHz(zone) {
   const numbers = (zone.hz.match(/\d+(?!\d*K)/g) || []).map(Number);
   return numbers.length ? Math.max(...numbers) : 0;
+}
+
+export function reviewsUrl(branch) {
+  return `https://2gis.kz/aktobe/firm/${branch.gisFirmId}/tab/reviews`;
+}
+
+export function ratingValue(value) {
+  return value.toFixed(1).replace('.', ',');
+}
+
+export function ratingCount(count) {
+  return `${formatPrice(count)} ${plural(count, 'оценка', 'оценки', 'оценок')}`;
+}
+
+/** Средний рейтинг сети, взвешенный по числу оценок в каждом клубе. */
+export function networkRating() {
+  const rated = branches.filter((b) => b.rating);
+  const count = rated.reduce((sum, b) => sum + b.rating.count, 0);
+  const value = rated.reduce((sum, b) => sum + b.rating.value * b.rating.count, 0) / count;
+  return { value, count };
 }
 
 export function gisUrl(branch) {

@@ -5,12 +5,13 @@ import BranchCard from '../components/BranchCard.astro';
 import BranchPrices from '../components/BranchPrices.astro';
 import BookingForm from '../components/BookingForm.astro';
 import Promos from '../components/Promos.astro';
-import { branches, formatPrice, maxHz, minHourPrice, photosOf, site } from '../lib/data.js';
+import { branches, formatPrice, maxHz, minHourPrice, networkRating, photosOf, ratingCount, ratingValue, site } from '../lib/data.js';
 import { url } from '../lib/url.js';
 
 const heroPhoto = photosOf('batys')[0];
 const topHz = Math.max(...branches.flatMap((b) => b.zones.map(maxHz)));
 const fromPrice = Math.min(...branches.map(minHourPrice));
+const rating = networkRating();
 const updated = new Date(site.pricesUpdated).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(' г.', '');
 
 const stats = [
@@ -45,6 +46,9 @@ const jsonLd = {
       <p class="hero__lead">
         Мониторы до {topHz} Гц, видеокарты RTX 50-й серии и PlayStation 5. Выбери клуб, посмотри цены и забронируй места в WhatsApp.
       </p>
+      <p class="hero__trust">
+        <span aria-hidden="true">★</span> <b>{ratingValue(rating.value)}</b> в 2ГИС · {ratingCount(rating.count)} гостей по всем клубам
+      </p>
       <div class="hero__actions">
         <a class="btn btn--primary" href="#booking" data-book data-track="hero_book">Забронировать</a>
         <a class="btn" href="#clubs" data-track="hero_clubs">Выбрать клуб</a>
@@ -66,8 +70,12 @@ const jsonLd = {
         <span class="eyebrow">Клубы</span>
         <h2>{branches.length} клубов, все работают круглосуточно</h2>
         <p>У каждого клуба свои залы, железо и цены. Открой карточку, чтобы посмотреть прайс и фото.</p>
+        <div class="nearest">
+          <button class="btn btn--sm" type="button" id="nearest-btn" data-track="nearest_club">Показать ближайший ко мне</button>
+          <span class="nearest__status" id="nearest-status" role="status"></span>
+        </div>
       </div>
-      <div class="clubs">
+      <div class="clubs" id="clubs-list">
         {branches.map((b, i) => <BranchCard branch={b} eager={i < 2} />)}
       </div>
     </div>
@@ -142,6 +150,43 @@ const jsonLd = {
 </Base>
 
 <script>
+  // Ближайший клуб считается прямо в браузере: координаты посетителя никуда не отправляются.
+  const nearestBtn = document.getElementById('nearest-btn') as HTMLButtonElement;
+  const nearestStatus = document.getElementById('nearest-status')!;
+  const list = document.getElementById('clubs-list')!;
+
+  function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const rad = Math.PI / 180;
+    const a = Math.sin(((lat2 - lat1) * rad) / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(((lon2 - lon1) * rad) / 2) ** 2;
+    return 6371 * 2 * Math.asin(Math.sqrt(a));
+  }
+
+  if (!('geolocation' in navigator)) nearestBtn.hidden = true;
+
+  nearestBtn.addEventListener('click', () => {
+    nearestStatus.textContent = 'Определяем, где ты…';
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const cards = [...list.querySelectorAll<HTMLElement>('[data-club]')]
+          .filter((card) => card.dataset.lat && card.dataset.lon)
+          .map((card) => ({ card, km: distanceKm(coords.latitude, coords.longitude, Number(card.dataset.lat), Number(card.dataset.lon)) }))
+          .sort((a, b) => a.km - b.km);
+        for (const { card, km } of cards) {
+          const label = card.querySelector<HTMLElement>('.club__distance')!;
+          label.textContent = km < 1 ? `${Math.round(km * 100) * 10} м от тебя` : `${km.toFixed(1).replace('.', ',')} км от тебя`;
+          label.hidden = false;
+          list.append(card);
+        }
+        const nearest = cards[0];
+        nearestStatus.textContent = nearest.km > 100 ? 'Ты далеко от Актобе, но клубы отсортированы по расстоянию.' : 'Клубы отсортированы: ближайший первый.';
+      },
+      () => {
+        nearestStatus.textContent = 'Не получилось определить местоположение. Разреши доступ к геопозиции или выбери клуб по адресу.';
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+    );
+  });
+
   const tabs = [...document.querySelectorAll<HTMLButtonElement>('.tab')];
   const panels = [...document.querySelectorAll<HTMLElement>('.panel')];
 
@@ -218,6 +263,21 @@ const jsonLd = {
     color: color-mix(in srgb, var(--snow) 86%, transparent);
   }
 
+  .hero__trust {
+    font-size: 15px;
+    color: color-mix(in srgb, var(--snow) 80%, transparent);
+  }
+
+  .hero__trust span {
+    color: var(--yellow);
+  }
+
+  .hero__trust b {
+    font-family: var(--font-display);
+    font-size: 19px;
+    color: var(--snow);
+  }
+
   .hero__actions {
     display: flex;
     flex-wrap: wrap;
@@ -276,6 +336,19 @@ const jsonLd = {
   .section--alt {
     background: #0b0d11;
     border-block: 1px solid var(--line);
+  }
+
+  .nearest {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin-top: 6px;
+  }
+
+  .nearest__status {
+    font-size: 14px;
+    color: var(--muted);
   }
 
   .clubs {

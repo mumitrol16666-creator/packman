@@ -9,7 +9,9 @@
     "preview": "astro preview",
     "test": "node --test tests/*.test.js",
     "og": "node scripts/make-og.mjs",
-    "build:preview": "SITE_URL=https://mumitrol16666-creator.github.io SITE_BASE=/packman PUBLIC_NOINDEX=1 astro build"
+    "build:preview": "SITE_URL=https://mumitrol16666-creator.github.io SITE_BASE=/packman PUBLIC_NOINDEX=1 astro build",
+    "server": "node server/index.js",
+    "report:demo": "node server/cli.js demo"
   },
   "dependencies": {
     "@fontsource-variable/onest": "^5.3.1",

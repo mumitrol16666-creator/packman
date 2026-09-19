@@ -5,7 +5,7 @@ import BranchPrices from '../../components/BranchPrices.astro';
 import BookingForm from '../../components/BookingForm.astro';
 import Promos from '../../components/Promos.astro';
 import Icon from '../../components/Icon.astro';
-import { branches, formatPrice, gisUrl, maxHz, minHourPrice, phonePretty, photosOf, site } from '../../lib/data.js';
+import { branches, formatPrice, gisUrl, maxHz, minHourPrice, phonePretty, photosOf, ratingCount, ratingValue, reviewsUrl, site } from '../../lib/data.js';
 import { url } from '../../lib/url.js';
 
 export function getStaticPaths() {
@@ -62,6 +62,11 @@ const jsonLd = {
         </ul>
 
         <div class="club-hero__chips">
+          {branch.rating && (
+            <a class="chip chip--rating" href={reviewsUrl(branch)} target="_blank" rel="noopener" data-track="reviews_2gis" data-branch={branch.slug}>
+              <span aria-hidden="true">★</span> {ratingValue(branch.rating.value)} · {ratingCount(branch.rating.count)} в 2ГИС
+            </a>
+          )}
           <span class="chip chip--accent">до {topHz} Гц</span>
           <span class="chip">от {formatPrice(fromPrice)} ₸/час</span>
           {totalPcs && <span class="chip">{totalPcs} ПК</span>}
@@ -236,6 +241,15 @@ const jsonLd = {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+  }
+
+  .chip--rating {
+    text-decoration: none;
+    border-color: color-mix(in srgb, var(--yellow) 45%, transparent);
+  }
+
+  .chip--rating span {
+    color: var(--yellow);
   }
 
   .club-hero__actions {
