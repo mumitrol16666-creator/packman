@@ -25,7 +25,7 @@ const { branch } = Astro.props;
         </div>
         {branch.consoles.map((c: any) => (
           <div class="consoles__row" role="row">
-            <span role="cell">{c.name.replace('PS5 · ', '').replace('PlayStation 5', 'Игровая зона')}</span>
+            <span role="cell">{c.name.replace('PS5 · ', '').replace('PlayStation 5', 'Приставка')}</span>
             <span role="cell" class="num">{formatPrice(c.prices.h1)}<span class="cur">₸</span></span>
             <span role="cell" class="num">{formatPrice(c.prices.h3)}<span class="cur">₸</span></span>
             <span role="cell" class="num">{formatPrice(c.prices.h5)}<span class="cur">₸</span></span>

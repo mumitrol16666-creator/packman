@@ -6,6 +6,7 @@ import BookingForm from '../../components/BookingForm.astro';
 import Promos from '../../components/Promos.astro';
 import Icon from '../../components/Icon.astro';
 import { branches, formatPrice, gisUrl, maxHz, minHourPrice, phonePretty, photosOf, site } from '../../lib/data.js';
+import { url } from '../../lib/url.js';
 
 export function getStaticPaths() {
   return branches.map((branch) => ({ params: { slug: branch.slug }, props: { branch } }));
@@ -23,7 +24,8 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'EntertainmentBusiness',
   name: `Pacman ${branch.name}`,
-  url: new URL(`/clubs/${branch.slug}/`, Astro.site),
+  url: new URL(url(`/clubs/${branch.slug}/`), Astro.site),
+  image: photos.length ? new URL(url(`/og/${branch.slug}.jpg`), Astro.site) : undefined,
   telephone: branch.phone,
   email: branch.email ?? undefined,
   priceRange: `от ${fromPrice} ₸/час`,
@@ -42,6 +44,7 @@ const jsonLd = {
   title={`Pacman ${branch.name} — компьютерный клуб в Актобе, ${branch.address}`}
   description={`Pacman ${branch.name}: ${branch.address}, круглосуточно. ${branch.zones.map((z: any) => z.name).join(', ')}${branch.consoles.length ? ', PS5' : ''}. Мониторы до ${topHz} Гц, от ${fromPrice} ₸/час. Бронь через WhatsApp.`}
   jsonLd={jsonLd}
+  ogImage={photos.length ? `/og/${branch.slug}.jpg` : undefined}
 >
   <div style={`--accent:${branch.accent}`}>
     <section class="club-hero">
@@ -49,7 +52,7 @@ const jsonLd = {
         <Image class="club-hero__bg" src={cover} alt="" widths={[640, 960, 1440]} sizes="100vw" loading="eager" fetchpriority="high" quality={62} />
       )}
       <div class="wrap club-hero__inner">
-        <a class="club-hero__back" href="/#clubs">← Все клубы</a>
+        <a class="club-hero__back" href={url('/#clubs')}>← Все клубы</a>
         <span class="eyebrow">Компьютерный клуб · {site.city}</span>
         <h1><span>Pacman</span> {branch.name}</h1>
 
@@ -123,7 +126,7 @@ const jsonLd = {
       <ul class="others">
         {others.map((b) => (
           <li style={`--accent:${b.accent}`}>
-            <a href={`/clubs/${b.slug}/`}>
+            <a href={url(`/clubs/${b.slug}/`)}>
               <b>{b.name}</b>
               <span>{b.address}</span>
               <span class="others__from">от {formatPrice(minHourPrice(b))} ₸/час</span>

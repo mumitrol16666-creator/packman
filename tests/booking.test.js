@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildMessage, formatDate, makeCode, plural, whatsappUrl } from '../src/lib/booking.js';
+import { buildMessage, formatDate, isAdultsOnly, isPast, makeCode, plural, unknownDurationLabel, whatsappUrl } from '../src/lib/booking.js';
 
 const branches = JSON.parse(readFileSync(new URL('../src/data/branches.json', import.meta.url)));
 
@@ -37,6 +37,32 @@ test('сообщение для одного: «хочу», без «мест р
   assert.match(text, /^Здравствуйте! Хочу забронировать 1 компьютер в Pacman Gold/);
   assert.doesNotMatch(text, /рядом/);
   assert.doesNotMatch(text, /Зона/);
+});
+
+test('«не знаю» для одного, «не знаем» для компании', () => {
+  assert.equal(unknownDurationLabel(1), 'Пока не знаю');
+  assert.equal(unknownDurationLabel(2), 'Пока не знаем');
+  assert.equal(unknownDurationLabel(20), 'Пока не знаем');
+});
+
+test('ночное время и ночные пакеты — только 18+', () => {
+  assert.equal(isAdultsOnly('21:30'), false);
+  assert.equal(isAdultsOnly('22:00'), true);
+  assert.equal(isAdultsOnly('03:00'), true);
+  assert.equal(isAdultsOnly('07:30'), true);
+  assert.equal(isAdultsOnly('08:00'), false);
+  assert.equal(isAdultsOnly('20:00', 'пакет «Ночь»'), true);
+  assert.equal(isAdultsOnly('20:00', 'пакет «Турбо ночь»'), true);
+  assert.equal(isAdultsOnly('12:00', 'пакет «День»'), false);
+});
+
+test('прошедшее время определяется с запасом в 5 минут', () => {
+  const now = new Date(2026, 8, 19, 21, 0);
+  assert.equal(isPast('2026-09-19', '20:30', now), true);
+  assert.equal(isPast('2026-09-19', '21:00', now), false);
+  assert.equal(isPast('2026-09-19', '21:30', now), false);
+  assert.equal(isPast('2026-09-18', '23:30', now), true);
+  assert.equal(isPast('2026-09-20', '00:00', now), false);
 });
 
 test('ссылка WhatsApp кодирует переносы и кириллицу', () => {

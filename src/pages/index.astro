@@ -6,6 +6,7 @@ import BranchPrices from '../components/BranchPrices.astro';
 import BookingForm from '../components/BookingForm.astro';
 import Promos from '../components/Promos.astro';
 import { branches, formatPrice, maxHz, minHourPrice, photosOf, site } from '../lib/data.js';
+import { url } from '../lib/url.js';
 
 const heroPhoto = photosOf('batys')[0];
 const topHz = Math.max(...branches.flatMap((b) => b.zones.map(maxHz)));
@@ -23,7 +24,8 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: site.brand,
-  url: Astro.site,
+  url: new URL(url('/'), Astro.site),
+  logo: new URL(url('/favicon.png'), Astro.site),
   sameAs: [site.instagram],
 };
 ---

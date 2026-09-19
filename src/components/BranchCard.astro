@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import Icon from './Icon.astro';
 import { formatPrice, maxHz, minHourPrice, photosOf } from '../lib/data.js';
+import { url } from '../lib/url.js';
 
 interface Props {
   branch: any;
@@ -14,7 +15,7 @@ const hasPs = branch.consoles.length > 0;
 ---
 
 <article class="club" style={`--accent:${branch.accent}`}>
-  <a class="club__media" href={`/clubs/${branch.slug}/`} tabindex="-1" aria-hidden="true">
+  <a class="club__media" href={url(`/clubs/${branch.slug}/`)} tabindex="-1" aria-hidden="true">
     {cover ? (
       <Image
         src={cover}
@@ -44,7 +45,7 @@ const hasPs = branch.consoles.length > 0;
     </div>
 
     <div class="club__actions">
-      <a class="btn btn--sm" href={`/clubs/${branch.slug}/`} data-track="club_open" data-branch={branch.slug}>Цены и залы</a>
+      <a class="btn btn--sm" href={url(`/clubs/${branch.slug}/`)} data-track="club_open" data-branch={branch.slug}>Цены и залы</a>
       <a class="btn btn--sm btn--primary" href="#booking" data-book data-branch={branch.slug} data-track="club_book">Забронировать</a>
     </div>
   </div>

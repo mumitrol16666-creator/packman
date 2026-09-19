@@ -6,16 +6,19 @@ import { Image } from 'astro:assets';
 import Icon from '../components/Icon.astro';
 import logo from '../assets/logo/lockup.png';
 import { branches, site } from '../lib/data.js';
+import { url } from '../lib/url.js';
 
 interface Props {
   title: string;
   description: string;
   jsonLd?: object;
+  ogImage?: string;
 }
-const { title, description, jsonLd } = Astro.props;
+const { title, description, jsonLd, ogImage = '/og/home.jpg' } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const isHome = Astro.url.pathname === '/';
-const home = isHome ? '' : '/';
+const isHome = Astro.url.pathname === url('/');
+const home = isHome ? '' : url('/');
+const noindex = Boolean(import.meta.env.PUBLIC_NOINDEX);
 ---
 
 <!doctype html>
@@ -32,13 +35,20 @@ const home = isHome ? '' : '/';
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="ru_KZ" />
-    <link rel="icon" href="/favicon.png" type="image/png" />
+    <meta property="og:site_name" content={site.brand} />
+    <meta property="og:image" content={new URL(url(ogImage), Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="icon" href={url('/favicon.png')} type="image/png" />
+    <link rel="apple-touch-icon" href={url('/favicon.png')} />
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
   </head>
   <body>
     <header class="header">
       <div class="wrap header__inner">
-        <a class="header__logo" href="/" aria-label={`${site.brand} — на главную`}>
+        <a class="header__logo" href={url('/')} aria-label={`${site.brand} — на главную`}>
           <Image src={logo} alt={site.brand} width={172} densities={[1, 2, 3]} loading="eager" />
         </a>
         <nav class="header__nav" aria-label="Разделы">
@@ -65,7 +75,7 @@ const home = isHome ? '' : '/';
         <ul class="footer__clubs">
           {branches.map((b) => (
             <li>
-              <a href={`/clubs/${b.slug}/`}>Pacman {b.name}</a>
+              <a href={url(`/clubs/${b.slug}/`)}>Pacman {b.name}</a>
               <span>{b.address}</span>
             </li>
           ))}

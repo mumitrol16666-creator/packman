@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import { branches } from '../lib/data.js';
+import { url } from '../lib/url.js';
+---
+
+<Base title="Страница не найдена — Pacman Game Center" description="Такой страницы нет. Выбери клуб Pacman в Актобе или вернись на главную.">
+  <section class="section lost">
+    <div class="wrap">
+      <span class="eyebrow">Ошибка 404</span>
+      <h1>Game over. Такой страницы нет</h1>
+      <p>Возможно, ссылка устарела. Выбери клуб или вернись на главную.</p>
+      <div class="lost__actions">
+        <a class="btn btn--primary" href={url('/')}>На главную</a>
+        {branches.map((b) => <a class="btn" href={url(`/clubs/${b.slug}/`)}>{b.name}</a>)}
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .lost .wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    min-height: 50vh;
+    justify-content: center;
+  }
+
+  .lost h1 {
+    font-size: clamp(36px, 8vw, 64px);
+    max-width: 16ch;
+  }
+
+  .lost p {
+    color: var(--muted);
+  }
+
+  .lost__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+</style>

@@ -83,6 +83,10 @@ const durations = [
           <span>Хотим сидеть рядом</span>
         </label>
 
+        <p class="booking__adults" id="bk-adults" hidden>
+          <b>18+</b>С 22:00 до 08:00 в клубе можно находиться только с 18 лет. Это требование закона РК.
+        </p>
+
         <p class="booking__error" id="bk-error" role="alert"></p>
       </form>
 
@@ -104,7 +108,7 @@ const durations = [
 </section>
 
 <script>
-  import { MAX_PEOPLE, buildMessage, makeCode, whatsappUrl } from '../lib/booking.js';
+  import { MAX_PEOPLE, buildMessage, isAdultsOnly, isPast, makeCode, unknownDurationLabel, whatsappUrl } from '../lib/booking.js';
   import { track } from '../lib/track.js';
 
   const data = JSON.parse(document.getElementById('booking-data')!.textContent!);
@@ -154,9 +158,16 @@ const durations = [
     $('bk-people').textContent = String(people);
     $('bk-together-wrap').hidden = people < 2;
     $('bk-to').textContent = `Pacman ${branch.name}`;
+    durationEl.options[0].textContent = unknownDurationLabel(people);
+    $('bk-adults').hidden = !isAdultsOnly(timeEl.value, durationEl.value);
 
-    if (!dateEl.value) {
-      $('bk-error').textContent = 'Выбери дату';
+    const problem = !dateEl.value
+      ? 'Выбери дату'
+      : isPast(dateEl.value, timeEl.value)
+        ? 'Это время уже прошло. Выбери другое время или завтрашнюю дату.'
+        : '';
+    if (problem) {
+      $('bk-error').textContent = problem;
       $('bk-message').textContent = '';
       sendEl.setAttribute('aria-disabled', 'true');
       sendEl.removeAttribute('href');
@@ -340,6 +351,33 @@ const durations = [
     accent-color: var(--yellow);
   }
 
+  .booking__adults {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: start;
+    padding: 10px 12px;
+    border: 1px solid color-mix(in srgb, var(--yellow) 40%, transparent);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--yellow) 7%, transparent);
+    font-size: 14px;
+    color: color-mix(in srgb, var(--snow) 88%, transparent);
+  }
+
+  .booking__adults[hidden] {
+    display: none;
+  }
+
+  .booking__adults b {
+    padding: 1px 7px;
+    border-radius: 6px;
+    background: var(--yellow);
+    color: var(--carbon);
+    font-family: var(--font-display);
+    font-size: 14px;
+    letter-spacing: 0.04em;
+  }
+
   .booking__error {
     min-height: 0;
     font-size: 14px;
@@ -370,6 +408,11 @@ const durations = [
     line-height: 1.5;
     white-space: pre-wrap;
     min-height: 120px;
+  }
+
+  .bubble:empty::before {
+    content: 'Сообщение появится, когда выберешь дату и время.';
+    opacity: 0.6;
   }
 
   .booking__actions {
