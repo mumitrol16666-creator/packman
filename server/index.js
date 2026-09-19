@@ -1,6 +1,8 @@
 import { createServer } from 'node:http';
 import { loadConfig } from './config.js';
 import { insertEvent, openDb, visitorSecret } from './db.js';
+import { createAdmin } from './admin/routes.js';
+import { serveFile } from './admin/static.js';
 import { createRateLimiter, normalizeEvent } from './ingest.js';
 import { bookingNotice } from './report.js';
 import { runScheduler } from './scheduler.js';
@@ -11,6 +13,7 @@ const db = openDb(config.dbPath);
 const secret = visitorSecret(db);
 const allow = createRateLimiter();
 const MAX_BODY = 4096;
+const admin = createAdmin({ db, config, clientIp });
 
 function cors(req, res) {
   const origin = req.headers.origin;
@@ -57,7 +60,16 @@ const server = createServer(async (req, res) => {
   if (req.method === 'GET' && path === '/api/health') {
     return res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true }));
   }
-  if (req.method !== 'POST' || path !== '/api/track') return res.writeHead(404).end();
+  if (admin && (await admin(req, res, path))) return;
+  if (req.method !== 'POST' || path !== '/api/track') {
+    // без Caddy или nginx сервис может сам отдавать собранный сайт: удобно локально и на маленьком сервере
+    if (config.serveSite && (req.method === 'GET' || req.method === 'HEAD')) {
+      const cache = path.startsWith('/_astro/') ? 'public, max-age=31536000, immutable' : 'no-cache';
+      if (serveFile(res, config.siteDir, path, { cache })) return;
+      if (serveFile(res, config.siteDir, '/404.html', { status: 404 })) return;
+    }
+    return res.writeHead(404).end();
+  }
 
   const body = await readBody(req);
   // ответ всегда одинаковый: по нему нельзя понять, принято событие или отброшено
@@ -98,6 +110,7 @@ async function tick() {
 
 server.listen(config.port, () => {
   console.log(`[pacman-analytics] слушает порт ${config.port}, база ${config.dbPath}, часовой пояс ${config.timezone}`);
+  console.log(admin ? '[pacman-analytics] админка включена: /admin/' : '[pacman-analytics] ADMIN_PASSWORD не задан: админка выключена');
   if (!config.botToken || !config.reportChat) console.log('[pacman-analytics] TG_BOT_TOKEN или TG_REPORT_CHAT_ID не заданы: события пишутся, отчёты не отправляются');
   tick();
   setInterval(tick, 5 * 60 * 1000).unref();

@@ -1,6 +1,6 @@
 // Картинки для превью ссылок (WhatsApp, Telegram, Instagram): фото клуба, затемнение и логотип.
 // Запуск: npm run og. Результат лежит в public/og/ и коммитится в репозиторий.
-import { readdirSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { readdirSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
 
@@ -47,8 +47,11 @@ const firstPhoto = (slug) => {
   return file ? join(dir, file) : null;
 };
 
-await make(firstPhoto('batys'), join(outDir, 'home.jpg'), '#fff200');
+await make(firstPhoto('batys') ?? branches.map((b) => firstPhoto(b.slug)).find(Boolean), join(outDir, 'home.jpg'), '#fff200');
 for (const b of branches) {
   const photo = firstPhoto(b.slug);
-  if (photo) await make(photo, join(outDir, `${b.slug}.jpg`), b.accent);
+  const out = join(outDir, `${b.slug}.jpg`);
+  if (photo) await make(photo, out, b.accent);
+  // у клуба удалили все фото: старая картинка превью больше не нужна, сайт возьмёт общую
+  else rmSync(out, { force: true });
 }

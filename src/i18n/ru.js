@@ -1,7 +1,7 @@
 import { plural } from '../lib/booking.js';
 
 const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-const num = (n) => n.toLocaleString('ru-RU').replace(/ /g, ' ');
+const num = (n) => n.toLocaleString('ru-RU').replace(/\u00a0/g, '\u202f');
 
 export default {
   lang: 'ru',
@@ -35,7 +35,7 @@ export default {
     title: (n) => `Pacman Game Center — сеть компьютерных клубов в Актобе, ${n} филиалов, круглосуточно`,
     description: (n, hz, price) => `Сеть компьютерных клубов Pacman в Актобе, ${n} филиалов: мониторы до ${hz} Гц, RTX 50-й серии, PS5. Цены от ${price} ₸/час, акции, бронь мест через WhatsApp.`,
     eyebrow: (city) => `Сеть компьютерных клубов · ${city}`,
-    h1: 'Играй на настоящем уровне',
+    h1: 'Играй на\u00a0настоящем уровне',
     lead: (hz) => `Мониторы до ${hz} Гц, видеокарты RTX 50-й серии и PlayStation 5. Выбери клуб, посмотри цены и забронируй места в WhatsApp.`,
     trust: (value, count) => ({ before: '', value, after: ` в 2ГИС · ${count} гостей по всем клубам` }),
     chooseClub: 'Выбрать клуб',

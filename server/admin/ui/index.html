@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Pacman — управление сайтом</title>
+    <link rel="stylesheet" href="/admin/admin.css" />
+  </head>
+  <body>
+    <main id="login" class="login" hidden>
+      <form id="login-form" class="login__card">
+        <h1>Pacman</h1>
+        <p>Управление сайтом</p>
+        <label for="password">Пароль</label>
+        <input id="password" type="password" autocomplete="current-password" required />
+        <p class="error" id="login-error" role="alert"></p>
+        <button class="btn btn--primary" type="submit">Войти</button>
+      </form>
+    </main>
+
+    <div id="app" hidden>
+      <header class="top">
+        <strong class="top__brand">Pacman <span>· сайт</span></strong>
+        <button class="status" id="build-status" type="button" title="Состояние публикации"></button>
+        <a class="btn btn--ghost" href="/" target="_blank" rel="noopener">Открыть сайт</a>
+        <button class="btn btn--ghost" id="logout" type="button">Выйти</button>
+      </header>
+      <nav class="tabs" id="tabs" aria-label="Разделы"></nav>
+      <main class="main" id="view"></main>
+      <footer class="savebar" id="savebar" hidden>
+        <span id="savebar-text">Есть несохранённые изменения</span>
+        <button class="btn btn--ghost" id="discard" type="button">Отменить</button>
+        <button class="btn btn--primary" id="save" type="button">Сохранить и опубликовать</button>
+      </footer>
+      <dialog id="dialog" class="dialog"></dialog>
+    </div>
+
+    <script type="module" src="/admin/admin.js"></script>
+  </body>
+</html>

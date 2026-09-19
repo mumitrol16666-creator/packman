@@ -31,7 +31,7 @@ export function photosOf(slug) {
 }
 
 export function formatPrice(value) {
-  return value.toLocaleString('ru-RU').replace(/ /g, ' ');
+  return value.toLocaleString('ru-RU').replace(/\u00a0/g, '\u202f');
 }
 
 export function minHourPrice(branch) {
