@@ -1,0 +1,399 @@
+---
+import Icon from './Icon.astro';
+import { branches, site } from '../lib/data.js';
+
+interface Props {
+  preselect?: string;
+}
+const { preselect } = Astro.props;
+
+const data = branches.map((b) => ({
+  slug: b.slug,
+  name: b.name,
+  whatsapp: b.whatsapp,
+  zones: [
+    ...b.zones.map((z) => ({ id: z.id, name: z.name })),
+    ...(b.consoles.length ? [{ id: 'ps5', name: 'PlayStation 5' }] : []),
+  ],
+}));
+
+const durations = [
+  ['', 'Пока не знаем'],
+  ['на 1 час', '1 час'],
+  ['на 3 часа', '3 часа'],
+  ['на 5 часов', '5 часов'],
+  ...site.packages.map((p) => [`пакет «${p.name}»`, `Пакет «${p.name}» · ${p.from}–${p.to}`]),
+];
+---
+
+<section class="section booking" id="booking">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Бронь</span>
+      <h2>Забронируй места за минуту</h2>
+      <p>Выбери клуб и время. Сайт соберёт сообщение, а администратор подтвердит бронь в WhatsApp.</p>
+    </div>
+
+    <div class="booking__grid">
+      <form class="booking__form" id="booking-form" novalidate>
+        <div class="field">
+          <label for="bk-branch">Клуб</label>
+          <select id="bk-branch" name="branch">
+            {branches.map((b) => (
+              <option value={b.slug} selected={b.slug === preselect}>Pacman {b.name} · {b.address}</option>
+            ))}
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="bk-date">Дата</label>
+            <input type="date" id="bk-date" name="date" required />
+          </div>
+          <div class="field">
+            <label for="bk-time">Время</label>
+            <select id="bk-time" name="time"></select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <span class="label" id="bk-people-label">Сколько человек</span>
+            <div class="stepper" role="group" aria-labelledby="bk-people-label">
+              <button type="button" id="bk-minus" aria-label="Меньше">−</button>
+              <output id="bk-people" aria-live="polite">2</output>
+              <button type="button" id="bk-plus" aria-label="Больше">+</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="bk-zone">Зона</label>
+            <select id="bk-zone" name="zone"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="bk-duration">На сколько</label>
+          <select id="bk-duration" name="duration">
+            {durations.map(([value, label]) => <option value={value}>{label}</option>)}
+          </select>
+        </div>
+
+        <label class="check" id="bk-together-wrap">
+          <input type="checkbox" id="bk-together" checked />
+          <span>Хотим сидеть рядом</span>
+        </label>
+
+        <p class="booking__error" id="bk-error" role="alert"></p>
+      </form>
+
+      <div class="booking__preview">
+        <p class="booking__to">Сообщение в WhatsApp <b id="bk-to"></b></p>
+        <div class="bubble" id="bk-message" aria-live="polite"></div>
+        <div class="booking__actions">
+          <a class="btn btn--wa" id="bk-send" href="#" target="_blank" rel="noopener" data-track="booking_whatsapp">
+            <Icon name="whatsapp" />Открыть WhatsApp
+          </a>
+          <button class="btn" type="button" id="bk-copy" aria-label="Скопировать текст"><Icon name="copy" /></button>
+        </div>
+        <p class="booking__hint">Сайт ничего не отправляет сам: ты увидишь готовый текст в WhatsApp и нажмёшь «Отправить». Бронь действует после ответа администратора.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="booking-data" set:html={JSON.stringify(data)} />
+</section>
+
+<script>
+  import { MAX_PEOPLE, buildMessage, makeCode, whatsappUrl } from '../lib/booking.js';
+  import { track } from '../lib/track.js';
+
+  const data = JSON.parse(document.getElementById('booking-data')!.textContent!);
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  const branchEl = $<HTMLSelectElement>('bk-branch');
+  const dateEl = $<HTMLInputElement>('bk-date');
+  const timeEl = $<HTMLSelectElement>('bk-time');
+  const zoneEl = $<HTMLSelectElement>('bk-zone');
+  const durationEl = $<HTMLSelectElement>('bk-duration');
+  const togetherEl = $<HTMLInputElement>('bk-together');
+  const sendEl = $<HTMLAnchorElement>('bk-send');
+
+  let people = 2;
+  const code = makeCode();
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const isoDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+  // по умолчанию — ближайшие полчаса плюс час на дорогу
+  const start = new Date(Date.now() + 60 * 60 * 1000);
+  start.setMinutes(start.getMinutes() < 30 ? 30 : 60, 0, 0);
+  dateEl.value = isoDate(start);
+  dateEl.min = isoDate(new Date());
+
+  for (let h = 0; h < 24; h++) {
+    for (const m of [0, 30]) {
+      const value = `${pad(h)}:${pad(m)}`;
+      timeEl.add(new Option(value, value, false, h === start.getHours() && m === start.getMinutes()));
+    }
+  }
+
+  function fillZones(selected = '') {
+    const branch = data.find((b: any) => b.slug === branchEl.value);
+    zoneEl.replaceChildren(new Option('Любая', ''));
+    for (const z of branch.zones) zoneEl.add(new Option(z.name, z.id, false, z.id === selected));
+  }
+
+  function current() {
+    const branch = data.find((b: any) => b.slug === branchEl.value);
+    const zone = branch.zones.find((z: any) => z.id === zoneEl.value);
+    return { branch, zone };
+  }
+
+  function render() {
+    const { branch, zone } = current();
+    $('bk-people').textContent = String(people);
+    $('bk-together-wrap').hidden = people < 2;
+    $('bk-to').textContent = `Pacman ${branch.name}`;
+
+    if (!dateEl.value) {
+      $('bk-error').textContent = 'Выбери дату';
+      $('bk-message').textContent = '';
+      sendEl.setAttribute('aria-disabled', 'true');
+      sendEl.removeAttribute('href');
+      return null;
+    }
+    $('bk-error').textContent = '';
+
+    const text = buildMessage({
+      branchName: branch.name,
+      date: dateEl.value,
+      time: timeEl.value,
+      people,
+      zoneName: zone?.name,
+      duration: durationEl.value,
+      together: togetherEl.checked,
+      code,
+    });
+    $('bk-message').textContent = text;
+    sendEl.removeAttribute('aria-disabled');
+    sendEl.href = whatsappUrl(branch.whatsapp, text);
+    return text;
+  }
+
+  $('bk-minus').addEventListener('click', () => { people = Math.max(1, people - 1); render(); });
+  $('bk-plus').addEventListener('click', () => { people = Math.min(MAX_PEOPLE, people + 1); render(); });
+  branchEl.addEventListener('change', () => { fillZones(); render(); });
+  for (const el of [dateEl, timeEl, zoneEl, durationEl, togetherEl]) el.addEventListener('input', render);
+
+  sendEl.addEventListener('click', (event) => {
+    if (!render()) { event.preventDefault(); return; }
+    const { branch, zone } = current();
+    track('booking_whatsapp', { branch: branch.slug, zone: zone?.id ?? null, people, code });
+  });
+
+  $('bk-copy').addEventListener('click', async () => {
+    const text = render();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      $('bk-copy').classList.add('is-done');
+      setTimeout(() => $('bk-copy').classList.remove('is-done'), 1200);
+    } catch {}
+  });
+
+  // кнопки «Забронировать» на карточках клубов и зон подставляют свой клуб и зону
+  document.addEventListener('click', (event) => {
+    const trigger = (event.target as HTMLElement).closest<HTMLElement>('[data-book]');
+    if (!trigger) return;
+    if (trigger.dataset.branch) {
+      branchEl.value = trigger.dataset.branch;
+      fillZones(trigger.dataset.zone);
+    }
+    render();
+  });
+
+  fillZones();
+  render();
+</script>
+
+<style>
+  .booking {
+    background:
+      radial-gradient(circle, rgba(255, 242, 0, 0.09) 1.5px, transparent 2px) 0 0 / 26px 26px,
+      var(--panel);
+    border-block: 1px solid var(--line);
+  }
+
+  .booking__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+
+  .booking__form,
+  .booking__preview {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    background: var(--carbon);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  label,
+  .label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  select,
+  input[type='date'] {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--snow);
+    font: inherit;
+    font-size: 16px;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  select {
+    padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9da3' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 18px;
+    text-overflow: ellipsis;
+  }
+
+  select:hover,
+  input[type='date']:hover {
+    border-color: var(--line-strong);
+  }
+
+  .stepper {
+    display: grid;
+    grid-template-columns: 46px 1fr 46px;
+    align-items: center;
+    min-height: 46px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .stepper button {
+    height: 46px;
+    border: 0;
+    background: transparent;
+    color: var(--snow);
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  .stepper button:hover {
+    background: rgba(247, 247, 244, 0.06);
+  }
+
+  .stepper output {
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--snow);
+    cursor: pointer;
+  }
+
+  .check[hidden] {
+    display: none;
+  }
+
+  .check input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--yellow);
+  }
+
+  .booking__error {
+    min-height: 0;
+    font-size: 14px;
+    color: var(--red);
+  }
+
+  .booking__error:empty {
+    display: none;
+  }
+
+  .booking__to {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .booking__to b {
+    color: var(--snow);
+    font-weight: 600;
+  }
+
+  .bubble {
+    position: relative;
+    padding: 12px 14px;
+    background: #0b3d2c;
+    border-radius: 4px 14px 14px 14px;
+    color: #e6fff2;
+    font-size: 15px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    min-height: 120px;
+  }
+
+  .booking__actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+
+  .btn[aria-disabled='true'] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  #bk-copy {
+    padding: 0 14px;
+  }
+
+  #bk-copy.is-done {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .booking__hint {
+    font-size: 13px;
+    color: var(--muted);
+  }
+</style>

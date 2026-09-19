@@ -1,0 +1,274 @@
+---
+import { formatPrice, site } from '../lib/data.js';
+
+interface Props {
+  zone: any;
+  branchSlug: string;
+}
+const { zone, branchSlug } = Astro.props;
+const p = zone.prices;
+
+const hourly = [
+  { label: '1 час', value: p.h1, perHour: null },
+  { label: '3 часа', value: p.h3, perHour: Math.round(p.h3 / 3) },
+  { label: '5 часов', value: p.h5, perHour: Math.round(p.h5 / 5) },
+];
+
+const specRows = [
+  ['Монитор', zone.specs.monitor.join(' или ')],
+  ['Процессор', zone.specs.cpu],
+  ['Видеокарта', zone.specs.gpu],
+  ['Память', zone.specs.ram],
+  ['Мышь', zone.specs.mouse],
+  ['Клавиатура', zone.specs.keyboard],
+  ['Наушники', zone.specs.headset],
+  ['Коврик', zone.specs.mousepad],
+].filter(([, v]) => v);
+
+const gpuShort = zone.specs.gpu.replace('GeForce ', '');
+const cpuShort = zone.specs.cpu.replace('Intel Core ', '').replace('AMD ', '');
+---
+
+<article class="zone" id={`${branchSlug}-${zone.id}`}>
+  <header class="zone__head">
+    <div>
+      <h3>{zone.name}</h3>
+      <p class="zone__hz">{zone.hz}</p>
+    </div>
+    {zone.pcs && <span class="chip chip--accent">{zone.pcs} ПК</span>}
+  </header>
+
+  <div class="zone__chips">
+    <span class="chip">{gpuShort}</span>
+    <span class="chip">{cpuShort}</span>
+    <span class="chip">{zone.specs.ram}</span>
+  </div>
+
+  <div class="zone__hourly">
+    {hourly.map((h) => (
+      <div class="tile">
+        <span class="tile__label">{h.label}</span>
+        <span class="tile__value num">{formatPrice(h.value)}<span class="cur">₸</span></span>
+        <span class="tile__per">{h.perHour ? `${formatPrice(h.perHour)} ₸/час` : 'без пакета'}</span>
+      </div>
+    ))}
+  </div>
+
+  <ul class="zone__packs">
+    {site.packages.map((pack) => (
+      <li class="pack" data-from={pack.from} data-to={pack.to}>
+        <span class="pack__name">{pack.name}</span>
+        <span class="pack__time">{pack.from}–{pack.to}</span>
+        <span class="pack__now">идёт сейчас</span>
+        <span class="pack__price num">{formatPrice(p[pack.id])}<span class="cur">₸</span></span>
+      </li>
+    ))}
+  </ul>
+
+  <details class="zone__specs">
+    <summary>Всё железо и периферия</summary>
+    <dl>
+      {specRows.map(([k, v]) => (
+        <div><dt>{k}</dt><dd>{v}</dd></div>
+      ))}
+    </dl>
+  </details>
+
+  <a class="btn btn--sm zone__book" href="#booking" data-book data-branch={branchSlug} data-zone={zone.id} data-track="zone_book">
+    Забронировать {zone.name}
+  </a>
+</article>
+
+<style>
+  .zone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 18px 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .zone::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--accent);
+  }
+
+  .zone__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .zone__head h3 {
+    font-size: 26px;
+  }
+
+  .zone__hz {
+    margin-top: 4px;
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--accent-text);
+  }
+
+  .zone__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .zone__hourly {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 10px 9px;
+    background: var(--panel-2);
+    border-radius: 10px;
+  }
+
+  .tile__label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .tile__value {
+    font-size: 26px;
+    line-height: 1.1;
+  }
+
+  .tile__per {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .zone__packs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .pack {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    column-gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .pack__name {
+    font-weight: 600;
+  }
+
+  .pack__time {
+    font-size: 13px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pack__price {
+    font-size: 20px;
+  }
+
+  .pack__now {
+    display: none;
+    grid-column: 1 / 3;
+    grid-row: 2;
+    font-size: 12px;
+    color: var(--green);
+  }
+
+  .pack__now::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    transform: translateY(-1px);
+  }
+
+  .pack.is-now .pack__now {
+    display: block;
+  }
+
+  .pack.is-now .pack__price {
+    grid-row: 1 / 3;
+    align-self: center;
+  }
+
+  .zone__specs summary {
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--muted);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .zone__specs summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .zone__specs summary::before {
+    content: '+';
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--snow);
+  }
+
+  .zone__specs[open] summary::before {
+    content: '–';
+  }
+
+  .zone__specs dl {
+    margin: 12px 0 0;
+    display: grid;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .zone__specs dl div {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 10px;
+  }
+
+  .zone__specs dt {
+    color: var(--muted);
+  }
+
+  .zone__specs dd {
+    margin: 0;
+  }
+
+  .zone__book {
+    margin-top: auto;
+    white-space: normal;
+    text-align: center;
+  }
+</style>

@@ -1,0 +1,279 @@
+:root {
+  --carbon: #07090c;
+  --panel: #111317;
+  --panel-2: #191c22;
+  --graphite: #211e1d;
+  --snow: #f7f7f4;
+  --muted: #9a9da3;
+  --line: rgba(247, 247, 244, 0.1);
+  --line-strong: rgba(247, 247, 244, 0.2);
+  --yellow: #fff200;
+  --gold: #d5a94e;
+  --green: #20c568;
+  --red: #e5253c;
+  --whatsapp: #25d366;
+  --accent: var(--yellow);
+  --accent-text: var(--yellow);
+
+  --font-display: 'Oswald Variable', 'Arial Narrow', sans-serif;
+  --font-body: 'Onest Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --gutter: 16px;
+  --max: 1120px;
+  --radius: 14px;
+  --header-h: 60px;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* акцент филиала задаётся инлайном; для текста на тёмном фоне он осветляется, чтобы читался */
+[style*='--accent'] {
+  --accent-text: color-mix(in srgb, var(--accent) 68%, #fff);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 12px);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--carbon);
+  color: var(--snow);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 650;
+  text-transform: uppercase;
+  line-height: 1.04;
+  letter-spacing: 0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  padding-block: 56px;
+}
+
+.section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.section-head h2 {
+  font-size: clamp(30px, 6vw, 46px);
+}
+
+.section-head p {
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+/* жёлтые шевроны из фирменных сторис */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+
+.eyebrow::before {
+  content: '››';
+  letter-spacing: -0.12em;
+  font-size: 18px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.btn {
+  --btn-bg: transparent;
+  --btn-fg: var(--snow);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn:hover {
+  border-color: var(--snow);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn--primary {
+  --btn-bg: var(--yellow);
+  --btn-fg: var(--carbon);
+  border-color: var(--yellow);
+}
+
+.btn--primary:hover {
+  --btn-bg: #fff766;
+  border-color: #fff766;
+}
+
+.btn--wa {
+  --btn-bg: var(--whatsapp);
+  --btn-fg: #04210f;
+  border-color: var(--whatsapp);
+}
+
+.btn--wa:hover {
+  --btn-bg: #4be083;
+  border-color: #4be083;
+}
+
+.btn--sm {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--snow);
+  background: rgba(247, 247, 244, 0.04);
+  white-space: nowrap;
+}
+
+.chip--accent {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.num {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.cur {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.72em;
+  margin-left: 0.12em;
+  opacity: 0.75;
+}
+
+/* дорожка из точек, которую «ест» пакман */
+.pac-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 18px;
+}
+
+.pac-divider::before {
+  content: '';
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: conic-gradient(from 125deg, var(--yellow) 0 290deg, transparent 290deg);
+}
+
+.pac-divider::after {
+  content: '';
+  flex: 1;
+  height: 4px;
+  background-image: radial-gradient(circle, rgba(247, 247, 244, 0.35) 2px, transparent 2.5px);
+  background-size: 18px 4px;
+  background-repeat: repeat-x;
+  background-position: left center;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    transition: none !important;
+  }
+}

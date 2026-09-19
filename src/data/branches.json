@@ -1,0 +1,366 @@
+[
+  {
+    "slug": "premium",
+    "name": "Premium",
+    "accent": "#7152FF",
+    "address": "проспект Абилкайыр-хана, 44",
+    "addressNote": "1 этаж",
+    "district": "район Астана",
+    "hours": "Круглосуточно",
+    "whatsapp": "77080404048",
+    "phone": "+77080404048",
+    "email": "pacmanpremium@gmail.com",
+    "gisFirmId": "70000001075155081",
+    "zones": [
+      {
+        "id": "vip",
+        "name": "VIP Varmilo",
+        "hz": "380 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["Alienware 27″ Full HD 380 Гц"],
+          "cpu": "Intel Core i7-12700KF",
+          "gpu": "GeForce RTX 4070",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro",
+          "keyboard": "Varmilo",
+          "headset": "Logitech G Pro"
+        },
+        "prices": { "h1": 1200, "h3": 2700, "h5": 3700, "morning": 1800, "day": 2400, "night": 4000, "turbo": 3200 }
+      },
+      {
+        "id": "g-pro",
+        "name": "G-Pro",
+        "hz": "420 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["ASUS 27″ Full HD 420 Гц"],
+          "cpu": "Intel Core i5-14600KF",
+          "gpu": "GeForce RTX 5070",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro",
+          "keyboard": "Logitech G Pro",
+          "headset": "Logitech G Pro"
+        },
+        "prices": { "h1": 950, "h3": 2300, "h5": 3000, "morning": 1600, "day": 2000, "night": 3300, "turbo": 2500 }
+      },
+      {
+        "id": "main",
+        "name": "Main Zone",
+        "hz": "280–420 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["ASUS 27″ Full HD 280 Гц", "ASUS 25″ Full HD 420 Гц"],
+          "cpu": "Intel Core i5-12400F",
+          "gpu": "GeForce RTX 3070",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro",
+          "keyboard": "Logitech G Pro",
+          "headset": "Logitech G Pro",
+          "mousepad": "SteelSeries QcK Heavy"
+        },
+        "prices": { "h1": 750, "h3": 1800, "h5": 2500, "morning": 1300, "day": 1750, "night": 2400, "turbo": 1800 }
+      }
+    ],
+    "consoles": [
+      { "id": "ps5-main", "name": "PS5 · Main Zone", "prices": { "h1": 900, "h3": 1750, "h5": 2700 } },
+      { "id": "ps5-vip-1", "name": "PS5 · VIP 1", "prices": { "h1": 1000, "h3": 2000, "h5": 3000 } },
+      { "id": "ps5-vip-2", "name": "PS5 · VIP 2", "prices": { "h1": 1000, "h3": 2000, "h5": 3000 } }
+    ]
+  },
+  {
+    "slug": "prime",
+    "name": "Prime",
+    "accent": "#78AEB8",
+    "address": "улица Марата Оспанова, 77",
+    "addressNote": null,
+    "district": "квартал Сазда-2",
+    "hours": "Круглосуточно",
+    "whatsapp": "77009410110",
+    "phone": "+77009410110",
+    "email": null,
+    "gisFirmId": "70000001099837314",
+    "zones": [
+      {
+        "id": "cs-room",
+        "name": "CS Room",
+        "hz": "540 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["ASUS 24″ Full HD 540 Гц"],
+          "cpu": "Intel Core i5-14600KF",
+          "gpu": "GeForce RTX 4070 Super",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro X Superlight",
+          "keyboard": "Varmilo / Dark Project",
+          "headset": "Logitech G Pro 2"
+        },
+        "prices": { "h1": 1200, "h3": 2700, "h5": 3700, "morning": 1800, "day": 2400, "night": 4000, "turbo": 3200 }
+      },
+      {
+        "id": "pubg-room",
+        "name": "PUBG Room",
+        "hz": "4K · 240 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["AOC 32″ 4K 240 Гц"],
+          "cpu": "Intel Core i5-14600KF",
+          "gpu": "GeForce RTX 4070 Super",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro X Superlight",
+          "keyboard": "Varmilo",
+          "headset": "Logitech G Pro"
+        },
+        "prices": { "h1": 1200, "h3": 2700, "h5": 3700, "morning": 1800, "day": 2400, "night": 4000, "turbo": 3200 }
+      },
+      {
+        "id": "g-room",
+        "name": "G Room",
+        "hz": "2K · 260–280 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["ASUS 27″ 2K 260–280 Гц"],
+          "cpu": "Intel Core i5-14600KF",
+          "gpu": "GeForce RTX 4070 Super",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro",
+          "keyboard": "Logitech G Pro / Varmilo",
+          "headset": "Logitech G Pro"
+        },
+        "prices": { "h1": 800, "h3": 2000, "h5": 2800, "morning": 1500, "day": 1800, "night": 2400, "turbo": 1800 }
+      }
+    ],
+    "consoles": []
+  },
+  {
+    "slug": "pro",
+    "name": "Pro",
+    "accent": "#17AEEB",
+    "address": "12-й микрорайон, 38а",
+    "addressNote": "1 этаж",
+    "district": "12-й микрорайон",
+    "hours": "Круглосуточно",
+    "whatsapp": "77009410101",
+    "phone": "+77009410101",
+    "email": null,
+    "gisFirmId": "70000001083800138",
+    "zones": [
+      {
+        "id": "bootcamp",
+        "name": "Boot Camp",
+        "hz": "500 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["Alienware 27″ Full HD 500 Гц"],
+          "cpu": "Intel Core i7-14700KF",
+          "gpu": "GeForce RTX 4070 Ti",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro Wireless",
+          "keyboard": "Varmilo",
+          "headset": "Alienware AW520H"
+        },
+        "prices": { "h1": 1100, "h3": 2700, "h5": 3650, "morning": 1800, "day": 2200, "night": 4000, "turbo": 3000 }
+      },
+      {
+        "id": "g-pro",
+        "name": "G Pro",
+        "hz": "260–360 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["ASUS 24″ Full HD 360 Гц", "ASUS 27″ 2K 260 Гц"],
+          "cpu": "Intel Core i5-13600KF",
+          "gpu": "GeForce RTX 3080",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro Wireless",
+          "keyboard": "Logitech G Pro",
+          "headset": "Logitech G Pro"
+        },
+        "prices": { "h1": 950, "h3": 2300, "h5": 3000, "morning": 1600, "day": 2000, "night": 3300, "turbo": 2500 }
+      },
+      {
+        "id": "main",
+        "name": "Общий зал",
+        "hz": "280 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["ASUS 27″ Full HD 280 Гц"],
+          "cpu": "Intel Core i5-13400F",
+          "gpu": "GeForce RTX 3070",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro Wireless",
+          "keyboard": "Logitech / HyperX",
+          "headset": "Logitech G Pro"
+        },
+        "prices": { "h1": 750, "h3": 1800, "h5": 2500, "morning": 1300, "day": 1750, "night": 2400, "turbo": 1800 }
+      }
+    ],
+    "consoles": [
+      { "id": "ps5", "name": "PlayStation 5", "prices": { "h1": 950, "h3": 1850, "h5": 2850 } }
+    ]
+  },
+  {
+    "slug": "batys",
+    "name": "Batys",
+    "accent": "#E5253C",
+    "address": "проспект Тауелсиздик, 9 к1",
+    "addressNote": null,
+    "district": "микрорайон Алтын Орда",
+    "hours": "Круглосуточно",
+    "whatsapp": "77084711001",
+    "phone": "+77084711001",
+    "email": null,
+    "gisFirmId": "70000001043029471",
+    "needsReview": "В сторис с прайсом указаны i5-12400F / RTX 5060 Ti (Main) и i5-14600F / RTX 5070 (VIP), в 2ГИС и на карточках железа — Ryzen. Взяты данные 2ГИС от 08.09.2026.",
+    "zones": [
+      {
+        "id": "vip",
+        "name": "VIP OLED",
+        "hz": "360–380 Гц",
+        "pcs": 10,
+        "specs": {
+          "monitor": ["ASUS 27″ Full HD 380 Гц", "ASUS 25″ 380 Гц"],
+          "cpu": "AMD Ryzen 7 7800X3D",
+          "gpu": "GeForce RTX 5070",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro",
+          "keyboard": "Dark Project",
+          "headset": "Logitech G Pro"
+        },
+        "prices": { "h1": 900, "h3": 1900, "h5": 2900, "morning": 1500, "day": 2200, "night": 3300, "turbo": 2500 }
+      },
+      {
+        "id": "main",
+        "name": "Общий зал",
+        "hz": "380 Гц",
+        "pcs": 38,
+        "specs": {
+          "monitor": ["ASUS 27″ Full HD 380 Гц", "ASUS 25″ 380 Гц"],
+          "cpu": "AMD Ryzen 5 7500F",
+          "gpu": "GeForce RTX 5070",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro",
+          "keyboard": "Dark Project",
+          "headset": "Logitech G Pro"
+        },
+        "prices": { "h1": 600, "h3": 1200, "h5": 2000, "morning": 1100, "day": 1600, "night": 2200, "turbo": 1800 }
+      }
+    ],
+    "consoles": [
+      { "id": "ps5", "name": "PlayStation 5", "prices": { "h1": 800, "h3": 2000, "h5": 3000 } }
+    ]
+  },
+  {
+    "slug": "gold",
+    "name": "Gold",
+    "accent": "#D5A94E",
+    "address": "улица Темирбека Жургенова, 20",
+    "addressNote": null,
+    "district": "Старый город",
+    "hours": "Круглосуточно",
+    "whatsapp": "77009410100",
+    "phone": "+77009410100",
+    "email": null,
+    "gisFirmId": "70000001089890322",
+    "needsReview": "Main Zone: в названии 240 Гц, в характеристиках 2ГИС монитор 280 Гц. Boot Camp 360: в сторис указан диапазон 360–500 Гц.",
+    "zones": [
+      {
+        "id": "bootcamp-380",
+        "name": "Boot Camp 380",
+        "hz": "280–380 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["ASUS 27″ 380 Гц", "Alienware 27″ 360 Гц", "ASUS 27″ 2K 280 Гц"],
+          "cpu": "Intel Core i5-12400F",
+          "gpu": "GeForce RTX 3070",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro / Alienware / SteelSeries Sensei",
+          "keyboard": "Logitech G Pro / Varmilo / Alienware",
+          "headset": "Logitech G Pro / Alienware AW520H"
+        },
+        "prices": { "h1": 1000, "h3": 2500, "h5": 3500, "morning": 1600, "day": 2000, "night": 3700, "turbo": 2700 }
+      },
+      {
+        "id": "bootcamp-360",
+        "name": "Boot Camp 360",
+        "hz": "360 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["SANV 24.5″ 360 Гц"],
+          "cpu": "Intel Core i7-12700F",
+          "gpu": "GeForce RTX 4070 Super",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro X Superlight",
+          "keyboard": "Dark Project",
+          "headset": "Logitech G Pro"
+        },
+        "prices": { "h1": 950, "h3": 2300, "h5": 3000, "morning": 1500, "day": 1900, "night": 3300, "turbo": 2500 }
+      },
+      {
+        "id": "main",
+        "name": "Main Zone",
+        "hz": "240 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["ASUS 27″ Full HD"],
+          "cpu": "Intel Core i5-12400F",
+          "gpu": "GeForce RTX 3070",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro",
+          "keyboard": "Logitech G Pro",
+          "headset": "Logitech G Pro"
+        },
+        "prices": { "h1": 750, "h3": 1800, "h5": 2500, "morning": 1300, "day": 1750, "night": 2400, "turbo": 1800 }
+      }
+    ],
+    "consoles": []
+  },
+  {
+    "slug": "city",
+    "name": "City",
+    "accent": "#C8C91E",
+    "address": "3-й микрорайон, 25г",
+    "addressNote": null,
+    "district": "жилой массив Есет Батыр",
+    "hours": "Круглосуточно",
+    "whatsapp": "77009410199",
+    "phone": "+77009410199",
+    "email": null,
+    "gisFirmId": "70000001110509062",
+    "zones": [
+      {
+        "id": "vip",
+        "name": "VIP",
+        "hz": "420 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["AOC Q27G4K 27″ 420 Гц"],
+          "cpu": "AMD Ryzen 7 7800X3D",
+          "gpu": "GeForce RTX 5070",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro X Superlight",
+          "keyboard": "Bloody",
+          "headset": "Logitech G Pro X"
+        },
+        "prices": { "h1": 950, "h3": 2300, "h5": 3000, "morning": 1500, "day": 1900, "night": 3300, "turbo": 2500 }
+      },
+      {
+        "id": "main",
+        "name": "Main Zone",
+        "hz": "310–420 Гц",
+        "pcs": null,
+        "specs": {
+          "monitor": ["ASUS ROG Strix 24.5″ 360–380 Гц"],
+          "cpu": "AMD Ryzen 5 7500F",
+          "gpu": "GeForce RTX 5070",
+          "ram": "32 ГБ",
+          "mouse": "Logitech G Pro X Superlight",
+          "keyboard": "Logitech K/DA",
+          "headset": "Logitech G Pro X",
+          "mousepad": "SteelSeries QcK Heavy"
+        },
+        "prices": { "h1": 750, "h3": 1800, "h5": 2500, "morning": 1300, "day": 1750, "night": 2400, "turbo": 1800 }
+      }
+    ],
+    "consoles": []
+  }
+]

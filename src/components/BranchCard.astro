@@ -1,0 +1,178 @@
+---
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import { formatPrice, maxHz, minHourPrice, photosOf } from '../lib/data.js';
+
+interface Props {
+  branch: any;
+  eager?: boolean;
+}
+const { branch, eager = false } = Astro.props;
+const cover = photosOf(branch.slug)[0];
+const topHz = Math.max(...branch.zones.map(maxHz));
+const hasPs = branch.consoles.length > 0;
+---
+
+<article class="club" style={`--accent:${branch.accent}`}>
+  <a class="club__media" href={`/clubs/${branch.slug}/`} tabindex="-1" aria-hidden="true">
+    {cover ? (
+      <Image
+        src={cover}
+        alt=""
+        widths={[400, 640, 960]}
+        sizes="(min-width: 900px) 360px, (min-width: 600px) 50vw, 100vw"
+        loading={eager ? 'eager' : 'lazy'}
+        quality={70}
+      />
+    ) : (
+      <div class="club__placeholder"><span>{branch.name}</span></div>
+    )}
+  </a>
+
+  <div class="club__body">
+    <div class="club__title">
+      <h3><span class="club__brand">Pacman</span> {branch.name}</h3>
+      <span class="club__from">от <b class="num">{formatPrice(minHourPrice(branch))}</b> ₸/час</span>
+    </div>
+
+    <p class="club__address"><Icon name="pin" />{branch.address}<span>{branch.district}</span></p>
+
+    <div class="club__chips">
+      <span class="chip chip--accent">до {topHz} Гц</span>
+      {branch.zones.map((z: any) => <span class="chip">{z.name}</span>)}
+      {hasPs && <span class="chip">PS5</span>}
+    </div>
+
+    <div class="club__actions">
+      <a class="btn btn--sm" href={`/clubs/${branch.slug}/`} data-track="club_open" data-branch={branch.slug}>Цены и залы</a>
+      <a class="btn btn--sm btn--primary" href="#booking" data-book data-branch={branch.slug} data-track="club_book">Забронировать</a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .club {
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.15s ease;
+  }
+
+  .club:hover {
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  .club__media {
+    display: block;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--panel-2);
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .club__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .club:hover .club__media img {
+    transform: scale(1.04);
+  }
+
+  .club__placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(circle, color-mix(in srgb, var(--accent) 55%, transparent) 2px, transparent 2.5px) 0 0 / 22px 22px,
+      linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, var(--carbon)), var(--carbon) 70%);
+  }
+
+  .club__placeholder span {
+    font-family: var(--font-display);
+    font-size: 64px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--accent);
+    background: var(--carbon);
+    padding: 0 14px;
+    line-height: 1.15;
+  }
+
+  .club__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    flex: 1;
+  }
+
+  .club__title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .club__title h3 {
+    font-size: 28px;
+  }
+
+  .club__brand {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .club__from {
+    font-size: 14px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .club__from b {
+    font-size: 20px;
+    color: var(--snow);
+  }
+
+  .club__address {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    column-gap: 8px;
+    font-size: 15px;
+  }
+
+  .club__address :global(svg) {
+    width: 18px;
+    height: 18px;
+    color: var(--accent);
+    transform: translateY(2px);
+  }
+
+  .club__address span {
+    grid-column: 2;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .club__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .club__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 4px;
+  }
+</style>

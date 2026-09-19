@@ -1,0 +1,227 @@
+---
+import '@fontsource-variable/oswald';
+import '@fontsource-variable/onest';
+import '../styles/global.css';
+import { Image } from 'astro:assets';
+import Icon from '../components/Icon.astro';
+import logo from '../assets/logo/lockup.png';
+import { branches, site } from '../lib/data.js';
+
+interface Props {
+  title: string;
+  description: string;
+  jsonLd?: object;
+}
+const { title, description, jsonLd } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const isHome = Astro.url.pathname === '/';
+const home = isHome ? '' : '/';
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#07090c" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="ru_KZ" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+  </head>
+  <body>
+    <header class="header">
+      <div class="wrap header__inner">
+        <a class="header__logo" href="/" aria-label={`${site.brand} — на главную`}>
+          <Image src={logo} alt={site.brand} width={172} densities={[1, 2, 3]} loading="eager" />
+        </a>
+        <nav class="header__nav" aria-label="Разделы">
+          <a href={`${home}#clubs`}>Клубы</a>
+          <a href={`${home}#prices`}>Цены</a>
+          <a href={`${home}#promos`}>Акции</a>
+          <a href={`${home}#rules`}>Правила</a>
+        </nav>
+        <a class="btn btn--sm btn--primary" href="#booking" data-book data-track="header_book">Забронировать</a>
+      </div>
+    </header>
+
+    <main><slot /></main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <div class="footer__brand">
+          <Image src={logo} alt={site.brand} width={150} densities={[1, 2]} />
+          <p>{site.tagline}</p>
+          <a class="footer__social" href={site.instagram} target="_blank" rel="noopener" data-track="instagram">
+            <Icon name="instagram" />{site.instagramHandle}
+          </a>
+        </div>
+        <ul class="footer__clubs">
+          {branches.map((b) => (
+            <li>
+              <a href={`/clubs/${b.slug}/`}>Pacman {b.name}</a>
+              <span>{b.address}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="wrap footer__legal">
+        <span>© {new Date().getFullYear()} {site.brand}, {site.city}</span>
+        <span>Все клубы работают круглосуточно</span>
+      </div>
+    </footer>
+
+    <script>
+      import { trackClicks, track } from '../lib/track.js';
+
+      trackClicks();
+      track('pageview', { referrer: document.referrer || null });
+
+      // подсветка пакетов, которые действуют прямо сейчас по времени Актобе
+      function markCurrentPackages() {
+        const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Aqtobe', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+        const now = Number(parts.find((p) => p.type === 'hour')!.value) % 24 * 60 + Number(parts.find((p) => p.type === 'minute')!.value);
+        const toMin = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
+        document.querySelectorAll<HTMLElement>('[data-from][data-to]').forEach((el) => {
+          const from = toMin(el.dataset.from!);
+          const to = toMin(el.dataset.to!);
+          const active = from < to ? now >= from && now < to : now >= from || now < to;
+          el.classList.toggle('is-now', active);
+        });
+      }
+      markCurrentPackages();
+      setInterval(markCurrentPackages, 60_000);
+    </script>
+  </body>
+</html>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: var(--header-h);
+    background: color-mix(in srgb, var(--carbon) 88%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .header__inner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .header__logo img {
+    width: 132px;
+  }
+
+  .header__nav {
+    display: none;
+    gap: 26px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .header__nav a {
+    text-decoration: none;
+    color: var(--muted);
+    transition: color 0.15s ease;
+  }
+
+  .header__nav a:hover {
+    color: var(--snow);
+  }
+
+  @media (min-width: 800px) {
+    .header__nav {
+      display: flex;
+    }
+    .header__logo img {
+      width: 172px;
+    }
+  }
+
+  .footer {
+    padding-block: 40px 28px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+  }
+
+  .footer__inner {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 28px;
+  }
+
+  .footer__brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    color: var(--muted);
+  }
+
+  .footer__social {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--snow);
+    text-decoration: none;
+  }
+
+  .footer__social :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .footer__clubs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px 24px;
+  }
+
+  .footer__clubs a {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 17px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .footer__clubs a:hover {
+    color: var(--yellow);
+  }
+
+  .footer__clubs span {
+    color: var(--muted);
+  }
+
+  .footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+  }
+</style>

@@ -1,0 +1,99 @@
+---
+import ZoneCard from './ZoneCard.astro';
+import { formatPrice, site } from '../lib/data.js';
+
+interface Props {
+  branch: any;
+}
+const { branch } = Astro.props;
+---
+
+<div class="prices" style={`--accent:${branch.accent}`}>
+  <div class="prices__zones">
+    {branch.zones.map((zone: any) => <ZoneCard zone={zone} branchSlug={branch.slug} />)}
+  </div>
+
+  {branch.consoles.length > 0 && (
+    <div class="consoles">
+      <h3 class="consoles__title">PlayStation 5</h3>
+      <div class="consoles__table" role="table" aria-label="Цены на PlayStation 5">
+        <div class="consoles__row consoles__row--head" role="row">
+          <span role="columnheader">Зона</span>
+          <span role="columnheader">1 час</span>
+          <span role="columnheader">3 часа</span>
+          <span role="columnheader">5 часов</span>
+        </div>
+        {branch.consoles.map((c: any) => (
+          <div class="consoles__row" role="row">
+            <span role="cell">{c.name.replace('PS5 · ', '').replace('PlayStation 5', 'Игровая зона')}</span>
+            <span role="cell" class="num">{formatPrice(c.prices.h1)}<span class="cur">₸</span></span>
+            <span role="cell" class="num">{formatPrice(c.prices.h3)}<span class="cur">₸</span></span>
+            <span role="cell" class="num">{formatPrice(c.prices.h5)}<span class="cur">₸</span></span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <p class="prices__note">{site.packageNote}</p>
+</div>
+
+<style>
+  .prices {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .prices__zones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .consoles {
+    padding: 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  .consoles__title {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  .consoles__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .consoles__row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .consoles__row--head {
+    font-size: 13px;
+    color: var(--muted);
+    padding-top: 0;
+  }
+
+  .consoles__row span:not(:first-child) {
+    text-align: right;
+  }
+
+  .consoles__row .num {
+    font-size: 19px;
+  }
+
+  .prices__note {
+    font-size: 14px;
+    color: var(--muted);
+  }
+</style>

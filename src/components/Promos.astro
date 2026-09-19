@@ -1,0 +1,79 @@
+---
+import { formatPrice, site } from '../lib/data.js';
+---
+
+<div class="promos">
+  {site.promos.map((promo) => (
+    <article class="promo" style={`--accent:${promo.color}`}>
+      <div class="promo__text">
+        <p class="promo__audience">{promo.audience}</p>
+        <h3>{promo.title}</h3>
+        <p class="promo__note">{promo.note}</p>
+      </div>
+      <div class="promo__badge num">
+        {promo.price ? (
+          <>{formatPrice(promo.price)}<small>{promo.unit}</small></>
+        ) : (
+          promo.badge
+        )}
+      </div>
+    </article>
+  ))}
+</div>
+
+<style>
+  .promos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 12px;
+  }
+
+  .promo {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 18px;
+    background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 12%, var(--panel)), var(--panel) 65%);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: var(--radius);
+  }
+
+  .promo__audience {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .promo h3 {
+    font-size: 24px;
+    margin: 2px 0 8px;
+  }
+
+  .promo__note {
+    font-size: 14px;
+    color: color-mix(in srgb, var(--snow) 80%, transparent);
+  }
+
+  .promo__badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 92px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--carbon);
+    font-size: 30px;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .promo__badge small {
+    margin-top: 4px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+  }
+</style>

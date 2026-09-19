@@ -1,0 +1,326 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import BranchPrices from '../../components/BranchPrices.astro';
+import BookingForm from '../../components/BookingForm.astro';
+import Promos from '../../components/Promos.astro';
+import Icon from '../../components/Icon.astro';
+import { branches, formatPrice, gisUrl, maxHz, minHourPrice, phonePretty, photosOf, site } from '../../lib/data.js';
+
+export function getStaticPaths() {
+  return branches.map((branch) => ({ params: { slug: branch.slug }, props: { branch } }));
+}
+
+const { branch } = Astro.props;
+const photos = photosOf(branch.slug);
+const [cover, ...gallery] = photos;
+const topHz = Math.max(...branch.zones.map(maxHz));
+const fromPrice = minHourPrice(branch);
+const others = branches.filter((b) => b.slug !== branch.slug);
+const totalPcs = branch.zones.every((z: any) => z.pcs) ? branch.zones.reduce((sum: number, z: any) => sum + z.pcs, 0) : null;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'EntertainmentBusiness',
+  name: `Pacman ${branch.name}`,
+  url: new URL(`/clubs/${branch.slug}/`, Astro.site),
+  telephone: branch.phone,
+  email: branch.email ?? undefined,
+  priceRange: `от ${fromPrice} ₸/час`,
+  openingHours: 'Mo-Su 00:00-24:00',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: branch.address,
+    addressLocality: site.city,
+    addressCountry: 'KZ',
+  },
+  sameAs: [gisUrl(branch), site.instagram],
+};
+---
+
+<Base
+  title={`Pacman ${branch.name} — компьютерный клуб в Актобе, ${branch.address}`}
+  description={`Pacman ${branch.name}: ${branch.address}, круглосуточно. ${branch.zones.map((z: any) => z.name).join(', ')}${branch.consoles.length ? ', PS5' : ''}. Мониторы до ${topHz} Гц, от ${fromPrice} ₸/час. Бронь через WhatsApp.`}
+  jsonLd={jsonLd}
+>
+  <div style={`--accent:${branch.accent}`}>
+    <section class="club-hero">
+      {cover && (
+        <Image class="club-hero__bg" src={cover} alt="" widths={[640, 960, 1440]} sizes="100vw" loading="eager" fetchpriority="high" quality={62} />
+      )}
+      <div class="wrap club-hero__inner">
+        <a class="club-hero__back" href="/#clubs">← Все клубы</a>
+        <span class="eyebrow">Компьютерный клуб · {site.city}</span>
+        <h1><span>Pacman</span> {branch.name}</h1>
+
+        <ul class="club-hero__facts">
+          <li><Icon name="pin" /><span>{branch.address}{branch.addressNote && `, ${branch.addressNote}`}<small>{branch.district}</small></span></li>
+          <li><Icon name="clock" /><span>{branch.hours}<small>без выходных</small></span></li>
+        </ul>
+
+        <div class="club-hero__chips">
+          <span class="chip chip--accent">до {topHz} Гц</span>
+          <span class="chip">от {formatPrice(fromPrice)} ₸/час</span>
+          {totalPcs && <span class="chip">{totalPcs} ПК</span>}
+          {branch.consoles.length > 0 && <span class="chip">PlayStation 5</span>}
+        </div>
+
+        <div class="club-hero__actions">
+          <a class="btn btn--primary" href="#booking" data-book data-branch={branch.slug} data-track="club_hero_book">Забронировать</a>
+          <a class="btn" href={`https://wa.me/${branch.whatsapp}`} target="_blank" rel="noopener" data-track="whatsapp_direct" data-branch={branch.slug}><Icon name="whatsapp" />WhatsApp</a>
+          <a class="btn" href={`tel:${branch.phone}`} data-track="phone" data-branch={branch.slug}><Icon name="phone" />{phonePretty(branch.phone)}</a>
+          <a class="btn" href={gisUrl(branch)} target="_blank" rel="noopener" data-track="route_2gis" data-branch={branch.slug}><Icon name="pin" />Маршрут в 2ГИС</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="prices">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Залы и цены</span>
+          <h2>Залы, железо и прайс</h2>
+          <p>Цены в тенге за одно место. Зелёная метка показывает пакеты, которые действуют прямо сейчас.</p>
+        </div>
+        <BranchPrices branch={branch} />
+      </div>
+    </section>
+
+    {gallery.length > 0 && (
+      <section class="section section--alt" id="photos">
+        <div class="wrap">
+          <div class="section-head">
+            <span class="eyebrow">Фото</span>
+            <h2>Как выглядит клуб</h2>
+          </div>
+          <div class="gallery">
+            {photos.map((photo, i) => (
+              <Image src={photo} alt={`Pacman ${branch.name}, фото ${i + 1}`} widths={[480, 800, 1200]} sizes="(min-width: 900px) 33vw, (min-width: 600px) 50vw, 100vw" quality={70} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+  </div>
+
+  <section class="section" id="promos">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Акции</span>
+        <h2>Действующие акции</h2>
+      </div>
+      <Promos />
+    </div>
+  </section>
+
+  <BookingForm preselect={branch.slug} />
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Сеть</span>
+        <h2>Другие клубы Pacman</h2>
+      </div>
+      <ul class="others">
+        {others.map((b) => (
+          <li style={`--accent:${b.accent}`}>
+            <a href={`/clubs/${b.slug}/`}>
+              <b>{b.name}</b>
+              <span>{b.address}</span>
+              <span class="others__from">от {formatPrice(minHourPrice(b))} ₸/час</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .club-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-bottom: 3px solid var(--accent);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, var(--carbon)), var(--carbon) 60%);
+  }
+
+  .club-hero :global(.club-hero__bg) {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .club-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, rgba(7, 9, 12, 0.9) 0%, rgba(7, 9, 12, 0.72) 55%, rgba(7, 9, 12, 0.45) 100%),
+      linear-gradient(180deg, rgba(7, 9, 12, 0) 50%, rgba(7, 9, 12, 0.85) 100%);
+  }
+
+  .club-hero:not(:has(img))::after {
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 40%, transparent) 1.5px, transparent 2px) 0 0 / 24px 24px;
+    opacity: 0.5;
+  }
+
+  .club-hero__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-block: 28px 36px;
+  }
+
+  .club-hero__back {
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .club-hero__back:hover {
+    color: var(--snow);
+  }
+
+  .club-hero h1 {
+    font-size: clamp(48px, 13vw, 104px);
+    font-weight: 700;
+    color: var(--accent-text);
+  }
+
+  .club-hero h1 span {
+    display: block;
+    font-size: 0.42em;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--snow);
+  }
+
+  .club-hero__facts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 28px;
+  }
+
+  .club-hero__facts li {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 10px;
+    font-size: 17px;
+  }
+
+  .club-hero__facts :global(svg) {
+    width: 20px;
+    height: 20px;
+    color: var(--accent);
+    transform: translateY(3px);
+  }
+
+  .club-hero__facts small {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .club-hero__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .club-hero__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .club-hero__actions .btn:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .club-hero__actions .btn:last-child {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 720px) {
+    .club-hero__inner {
+      padding-block: 40px 56px;
+    }
+    .club-hero__actions {
+      display: flex;
+      flex-wrap: wrap;
+      width: auto;
+    }
+  }
+
+  .section--alt {
+    background: #0b0d11;
+    border-block: 1px solid var(--line);
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: 10px;
+  }
+
+  .gallery :global(img) {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    border-radius: 10px;
+    background: var(--panel);
+  }
+
+  .others {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: 10px;
+  }
+
+  .others a {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: 100%;
+    padding: 14px 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 14px;
+    color: var(--muted);
+    transition: border-color 0.15s ease;
+  }
+
+  .others a:hover {
+    border-color: var(--accent);
+  }
+
+  .others b {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--snow);
+  }
+
+  .others__from {
+    margin-top: 6px;
+    color: var(--accent-text);
+  }
+</style>
