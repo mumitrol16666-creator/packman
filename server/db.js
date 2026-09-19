@@ -20,7 +20,8 @@ const SCHEMA = `
     zone TEXT,
     section TEXT,
     value INTEGER,
-    code TEXT
+    code TEXT,
+    lang TEXT
   );
   CREATE INDEX IF NOT EXISTS events_day_event ON events (day, event);
   CREATE INDEX IF NOT EXISTS events_session ON events (session);
@@ -38,6 +39,9 @@ export function openDb(path) {
   const db = new DatabaseSync(path);
   db.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 3000;');
   db.exec(SCHEMA);
+  // базы, созданные до появления казахской версии сайта
+  const columns = db.prepare('PRAGMA table_info(events)').all().map((c) => c.name);
+  if (!columns.includes('lang')) db.exec('ALTER TABLE events ADD COLUMN lang TEXT');
   return db;
 }
 
@@ -50,9 +54,9 @@ export function visitorSecret(db) {
   return value;
 }
 
-const INSERT = `INSERT INTO events (ts, day, hour, event, path, visitor, session, device, source, campaign, branch, zone, section, value, code)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+const INSERT = `INSERT INTO events (ts, day, hour, event, path, visitor, session, device, source, campaign, branch, zone, section, value, code, lang)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
 export function insertEvent(db, e) {
-  db.prepare(INSERT).run(e.ts, e.day, e.hour, e.event, e.path, e.visitor, e.session, e.device, e.source, e.campaign, e.branch, e.zone, e.section, e.value, e.code);
+  db.prepare(INSERT).run(e.ts, e.day, e.hour, e.event, e.path, e.visitor, e.session, e.device, e.source, e.campaign, e.branch, e.zone, e.section, e.value, e.code, e.lang ?? null);
 }

@@ -59,7 +59,7 @@ export function normalizeEvent(body, { ip, userAgent, secret, timezone, now = Da
   if (typeof body.path !== 'string' || !body.path.startsWith('/')) return null;
 
   const { day, hour } = localParts(now, timezone);
-  const clubPage = body.path.match(/^\/clubs\/([a-z0-9-]+)\//);
+  const clubPage = body.path.match(/^(?:\/kz)?\/clubs\/([a-z0-9-]+)\//);
   const number = Number.isFinite(body.ms) ? body.ms : Number.isFinite(body.people) ? body.people : null;
 
   return {
@@ -78,6 +78,7 @@ export function normalizeEvent(body, { ip, userAgent, secret, timezone, now = Da
     section: slug(body.section),
     value: number === null ? null : Math.max(0, Math.min(Math.round(number), 30 * 60 * 1000)),
     code: typeof body.code === 'string' && CODE_RE.test(body.code) ? body.code : null,
+    lang: body.lang === 'kk' || body.path.startsWith('/kz/') ? 'kk' : 'ru',
   };
 }
 

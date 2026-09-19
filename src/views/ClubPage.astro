@@ -1,0 +1,357 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import BranchPrices from '../components/BranchPrices.astro';
+import BookingForm from '../components/BookingForm.astro';
+import Events from '../components/Events.astro';
+import Promos from '../components/Promos.astro';
+import Icon from '../components/Icon.astro';
+import { branches, formatPrice, gisUrl, maxHz, minHourPrice, phonePretty, photosOf, ratingValue, reviewsUrl, site } from '../lib/data.js';
+import { loc, ui } from '../i18n/index.js';
+import { asset, url } from '../lib/url.js';
+
+interface Props {
+  branch: any;
+  lang?: string;
+}
+const { branch, lang = 'ru' } = Astro.props;
+const t = ui(lang);
+const c = t.club;
+
+const photos = photosOf(branch.slug);
+const [cover, ...gallery] = photos;
+const topHz = Math.max(...branch.zones.map(maxHz));
+const fromPrice = minHourPrice(branch);
+const others = branches.filter((b) => b.slug !== branch.slug);
+const totalPcs = branch.zones.every((z: any) => z.pcs) ? branch.zones.reduce((sum: number, z: any) => sum + z.pcs, 0) : null;
+const address = loc(branch, 'address', lang);
+const addressNote = loc(branch, 'addressNote', lang);
+const zoneNames = [...branch.zones.map((z: any) => loc(z, 'name', lang)), ...(branch.consoles.length ? ['PS5'] : [])].join(', ');
+const pagePath = `/clubs/${branch.slug}/`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'EntertainmentBusiness',
+  name: `Pacman ${branch.name}`,
+  url: new URL(url(pagePath, lang), Astro.site),
+  image: photos.length ? new URL(asset(`/og/${branch.slug}.jpg`), Astro.site) : undefined,
+  telephone: branch.phone,
+  email: branch.email ?? undefined,
+  priceRange: t.fromPrice(fromPrice),
+  openingHours: 'Mo-Su 00:00-24:00',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: address,
+    addressLocality: loc(site, 'city', lang),
+    addressCountry: 'KZ',
+  },
+  geo: branch.geo ? { '@type': 'GeoCoordinates', latitude: branch.geo.lat, longitude: branch.geo.lon } : undefined,
+  sameAs: [gisUrl(branch), site.instagram],
+};
+---
+
+<Base
+  title={c.title(branch.name, address)}
+  description={c.description(branch.name, address, zoneNames, topHz, fromPrice)}
+  lang={lang}
+  pagePath={pagePath}
+  jsonLd={jsonLd}
+  ogImage={photos.length ? `/og/${branch.slug}.jpg` : undefined}
+>
+  <div style={`--accent:${branch.accent}`}>
+    <section class="club-hero">
+      {cover && (
+        <Image class="club-hero__bg" src={cover} alt="" widths={[640, 960, 1440]} sizes="100vw" loading="eager" fetchpriority="high" quality={62} />
+      )}
+      <div class="wrap club-hero__inner">
+        <a class="club-hero__back" href={url('/', lang) + '#clubs'}>{c.back}</a>
+        <span class="eyebrow">{c.eyebrow(loc(site, 'city', lang))}</span>
+        <h1><span>Pacman</span> {branch.name}</h1>
+
+        <ul class="club-hero__facts">
+          <li><Icon name="pin" /><span>{address}{addressNote && `, ${addressNote}`}<small>{loc(branch, 'district', lang)}</small></span></li>
+          <li><Icon name="clock" /><span>{loc(branch, 'hours', lang)}<small>{t.noDaysOff}</small></span></li>
+        </ul>
+
+        <div class="club-hero__chips">
+          {branch.rating && (
+            <a class="chip chip--rating" href={reviewsUrl(branch)} target="_blank" rel="noopener" data-track="reviews_2gis" data-branch={branch.slug}>
+              <span aria-hidden="true">★</span> {ratingValue(branch.rating.value)} · {t.ratingIn2gis(t.ratingCount(branch.rating.count))}
+            </a>
+          )}
+          <span class="chip chip--accent">{t.upToHz(topHz)}</span>
+          <span class="chip">{t.fromPrice(fromPrice)}</span>
+          {totalPcs && <span class="chip">{t.pcs(totalPcs)}</span>}
+          {branch.consoles.length > 0 && <span class="chip">PlayStation 5</span>}
+        </div>
+
+        <div class="club-hero__actions">
+          <a class="btn btn--primary" href="#booking" data-book data-branch={branch.slug} data-track="club_hero_book">{t.book}</a>
+          <a class="btn" href={`https://wa.me/${branch.whatsapp}`} target="_blank" rel="noopener" data-track="whatsapp_direct" data-branch={branch.slug}><Icon name="whatsapp" />WhatsApp</a>
+          <a class="btn" href={`tel:${branch.phone}`} data-track="phone" data-branch={branch.slug}><Icon name="phone" />{phonePretty(branch.phone)}</a>
+          <a class="btn" href={gisUrl(branch)} target="_blank" rel="noopener" data-track="route_2gis" data-branch={branch.slug}><Icon name="pin" />{c.route}</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="prices">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">{c.pricesEyebrow}</span>
+          <h2>{c.pricesTitle}</h2>
+          <p>{c.pricesLead}</p>
+        </div>
+        <BranchPrices branch={branch} lang={lang} />
+      </div>
+    </section>
+
+    {gallery.length > 0 && (
+      <section class="section section--alt" id="photos">
+        <div class="wrap">
+          <div class="section-head">
+            <span class="eyebrow">{c.photosEyebrow}</span>
+            <h2>{c.photosTitle}</h2>
+          </div>
+          <div class="gallery">
+            {photos.map((photo, i) => (
+              <Image src={photo} alt={c.photoAlt(branch.name, i + 1)} widths={[480, 800, 1200]} sizes="(min-width: 900px) 33vw, (min-width: 600px) 50vw, 100vw" quality={70} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+  </div>
+
+  <Events lang={lang} branch={branch.slug} />
+
+  <section class="section" id="promos">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">{t.home.promosEyebrow}</span>
+        <h2>{t.home.promosTitle}</h2>
+      </div>
+      <Promos lang={lang} />
+    </div>
+  </section>
+
+  <BookingForm preselect={branch.slug} lang={lang} />
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">{c.networkEyebrow}</span>
+        <h2>{c.othersTitle}</h2>
+      </div>
+      <ul class="others">
+        {others.map((b) => (
+          <li style={`--accent:${b.accent}`}>
+            <a href={url(`/clubs/${b.slug}/`, lang)}>
+              <b>{b.name}</b>
+              <span>{loc(b, 'address', lang)}</span>
+              <span class="others__from">{t.fromPrice(minHourPrice(b))}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .club-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-bottom: 3px solid var(--accent);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, var(--carbon)), var(--carbon) 60%);
+  }
+
+  .club-hero :global(.club-hero__bg) {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .club-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, rgba(7, 9, 12, 0.9) 0%, rgba(7, 9, 12, 0.72) 55%, rgba(7, 9, 12, 0.45) 100%),
+      linear-gradient(180deg, rgba(7, 9, 12, 0) 50%, rgba(7, 9, 12, 0.85) 100%);
+  }
+
+  .club-hero:not(:has(img))::after {
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 40%, transparent) 1.5px, transparent 2px) 0 0 / 24px 24px;
+    opacity: 0.5;
+  }
+
+  .club-hero__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-block: 28px 36px;
+  }
+
+  .club-hero__back {
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .club-hero__back:hover {
+    color: var(--snow);
+  }
+
+  .club-hero h1 {
+    font-size: clamp(48px, 13vw, 104px);
+    font-weight: 700;
+    color: var(--accent-text);
+  }
+
+  .club-hero h1 span {
+    display: block;
+    font-size: 0.42em;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--snow);
+  }
+
+  .club-hero__facts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 28px;
+  }
+
+  .club-hero__facts li {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 10px;
+    font-size: 17px;
+  }
+
+  .club-hero__facts :global(svg) {
+    width: 20px;
+    height: 20px;
+    color: var(--accent);
+    transform: translateY(3px);
+  }
+
+  .club-hero__facts small {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .club-hero__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .chip--rating {
+    text-decoration: none;
+    border-color: color-mix(in srgb, var(--yellow) 45%, transparent);
+  }
+
+  .chip--rating span {
+    color: var(--yellow);
+  }
+
+  .club-hero__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .club-hero__actions .btn:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .club-hero__actions .btn:last-child {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 720px) {
+    .club-hero__inner {
+      padding-block: 40px 56px;
+    }
+    .club-hero__actions {
+      display: flex;
+      flex-wrap: wrap;
+      width: auto;
+    }
+  }
+
+  .section--alt {
+    background: #0b0d11;
+    border-block: 1px solid var(--line);
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: 10px;
+  }
+
+  .gallery :global(img) {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    border-radius: 10px;
+    background: var(--panel);
+  }
+
+  .others {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: 10px;
+  }
+
+  .others a {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: 100%;
+    padding: 14px 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 14px;
+    color: var(--muted);
+    transition: border-color 0.15s ease;
+  }
+
+  .others a:hover {
+    border-color: var(--accent);
+  }
+
+  .others b {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--snow);
+  }
+
+  .others__from {
+    margin-top: 6px;
+    color: var(--accent-text);
+  }
+</style>

@@ -1,78 +1,87 @@
 ---
 import Icon from './Icon.astro';
 import { branches, site } from '../lib/data.js';
+import { loc, ui } from '../i18n/index.js';
 
 interface Props {
   preselect?: string;
+  lang?: string;
 }
-const { preselect } = Astro.props;
+const { preselect, lang = 'ru' } = Astro.props;
+const t = ui(lang);
+const b = t.booking;
 
-const data = branches.map((b) => ({
-  slug: b.slug,
-  name: b.name,
-  whatsapp: b.whatsapp,
-  zones: [
-    ...b.zones.map((z) => ({ id: z.id, name: z.name })),
-    ...(b.consoles.length ? [{ id: 'ps5', name: 'PlayStation 5' }] : []),
-  ],
-}));
+const data = {
+  lang,
+  branches: branches.map((branch) => ({
+    slug: branch.slug,
+    name: branch.name,
+    whatsapp: branch.whatsapp,
+    zones: [
+      ...branch.zones.map((z: any) => ({ id: z.id, name: loc(z, 'name', lang) })),
+      ...(branch.consoles.length ? [{ id: 'ps5', name: 'PlayStation 5' }] : []),
+    ],
+  })),
+  packages: site.packages.map((p: any) => ({ id: p.id, name: loc(p, 'name', lang), from: p.from, to: p.to })),
+  strings: { anyZone: b.anyZone, unknownOne: b.unknownOne, unknownMany: b.unknownMany, pickDate: b.pickDate, past: b.past },
+};
 
 const durations = [
-  ['', 'Пока не знаем'],
-  ['на 1 час', '1 час'],
-  ['на 3 часа', '3 часа'],
-  ['на 5 часов', '5 часов'],
-  ...site.packages.map((p) => [`пакет «${p.name}»`, `Пакет «${p.name}» · ${p.from}–${p.to}`]),
+  ['', b.unknownMany],
+  ['h1', b.hours.h1],
+  ['h3', b.hours.h3],
+  ['h5', b.hours.h5],
+  ...site.packages.map((p: any) => [p.id, b.packageOption(loc(p, 'name', lang), p.from, p.to)]),
 ];
 ---
 
 <section class="section booking" id="booking">
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow">Бронь</span>
-      <h2>Забронируй места за минуту</h2>
-      <p>Выбери клуб и время. Сайт соберёт сообщение, а администратор подтвердит бронь в WhatsApp.</p>
+      <span class="eyebrow">{b.eyebrow}</span>
+      <h2>{b.title}</h2>
+      <p>{b.lead}</p>
     </div>
 
     <div class="booking__grid">
       <form class="booking__form" id="booking-form" novalidate>
         <div class="field">
-          <label for="bk-branch">Клуб</label>
+          <label for="bk-branch">{b.club}</label>
           <select id="bk-branch" name="branch">
-            {branches.map((b) => (
-              <option value={b.slug} selected={b.slug === preselect}>Pacman {b.name} · {b.address}</option>
+            {branches.map((branch) => (
+              <option value={branch.slug} selected={branch.slug === preselect}>Pacman {branch.name} · {loc(branch, 'address', lang)}</option>
             ))}
           </select>
         </div>
 
         <div class="field-row">
           <div class="field">
-            <label for="bk-date">Дата</label>
+            <label for="bk-date">{b.date}</label>
             <input type="date" id="bk-date" name="date" required />
           </div>
           <div class="field">
-            <label for="bk-time">Время</label>
+            <label for="bk-time">{b.time}</label>
             <select id="bk-time" name="time"></select>
           </div>
         </div>
 
         <div class="field-row">
           <div class="field">
-            <span class="label" id="bk-people-label">Сколько человек</span>
+            <span class="label" id="bk-people-label">{b.people}</span>
             <div class="stepper" role="group" aria-labelledby="bk-people-label">
-              <button type="button" id="bk-minus" aria-label="Меньше">−</button>
+              <button type="button" id="bk-minus" aria-label={b.less}>−</button>
               <output id="bk-people" aria-live="polite">2</output>
-              <button type="button" id="bk-plus" aria-label="Больше">+</button>
+              <button type="button" id="bk-plus" aria-label={b.more}>+</button>
             </div>
           </div>
           <div class="field">
-            <label for="bk-zone">Зона</label>
+            <label for="bk-zone">{b.zone}</label>
             <select id="bk-zone" name="zone"></select>
           </div>
         </div>
 
         <div class="field">
-          <label for="bk-duration">На сколько</label>
+          <label for="bk-duration">{b.duration}</label>
           <select id="bk-duration" name="duration">
             {durations.map(([value, label]) => <option value={value}>{label}</option>)}
           </select>
@@ -80,26 +89,26 @@ const durations = [
 
         <label class="check" id="bk-together-wrap">
           <input type="checkbox" id="bk-together" checked />
-          <span>Хотим сидеть рядом</span>
+          <span>{b.together}</span>
         </label>
 
         <p class="booking__adults" id="bk-adults" hidden>
-          <b>18+</b>С 22:00 до 08:00 в клубе можно находиться только с 18 лет. Это требование закона РК.
+          <b>18+</b>{b.adults}
         </p>
 
         <p class="booking__error" id="bk-error" role="alert"></p>
       </form>
 
       <div class="booking__preview">
-        <p class="booking__to">Сообщение в WhatsApp <b id="bk-to"></b></p>
-        <div class="bubble" id="bk-message" aria-live="polite"></div>
+        <p class="booking__to">{b.messageTo} <b id="bk-to"></b></p>
+        <div class="bubble" id="bk-message" aria-live="polite" data-placeholder={b.placeholder}></div>
         <div class="booking__actions">
           <a class="btn btn--wa" id="bk-send" href="#" target="_blank" rel="noopener" data-track="booking_whatsapp">
-            <Icon name="whatsapp" />Открыть WhatsApp
+            <Icon name="whatsapp" />{b.open}
           </a>
-          <button class="btn" type="button" id="bk-copy" aria-label="Скопировать текст"><Icon name="copy" /></button>
+          <button class="btn" type="button" id="bk-copy" aria-label={b.copy}><Icon name="copy" /></button>
         </div>
-        <p class="booking__hint">Сайт ничего не отправляет сам: ты увидишь готовый текст в WhatsApp и нажмёшь «Отправить». Бронь действует после ответа администратора.</p>
+        <p class="booking__hint">{b.hint}</p>
       </div>
     </div>
   </div>
@@ -108,10 +117,11 @@ const durations = [
 </section>
 
 <script>
-  import { MAX_PEOPLE, buildMessage, isAdultsOnly, isPast, makeCode, unknownDurationLabel, whatsappUrl } from '../lib/booking.js';
+  import { MAX_PEOPLE, buildMessage, isAdultsOnly, isPast, makeCode, whatsappUrl } from '../lib/booking.js';
   import { track } from '../lib/track.js';
 
   const data = JSON.parse(document.getElementById('booking-data')!.textContent!);
+  const strings = data.strings;
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
   const branchEl = $<HTMLSelectElement>('bk-branch');
@@ -142,15 +152,22 @@ const durations = [
   }
 
   function fillZones(selected = '') {
-    const branch = data.find((b: any) => b.slug === branchEl.value);
-    zoneEl.replaceChildren(new Option('Любая', ''));
+    const branch = data.branches.find((b: any) => b.slug === branchEl.value);
+    zoneEl.replaceChildren(new Option(strings.anyZone, ''));
     for (const z of branch.zones) zoneEl.add(new Option(z.name, z.id, false, z.id === selected));
   }
 
   function current() {
-    const branch = data.find((b: any) => b.slug === branchEl.value);
+    const branch = data.branches.find((b: any) => b.slug === branchEl.value);
     const zone = branch.zones.find((z: any) => z.id === zoneEl.value);
     return { branch, zone };
+  }
+
+  function duration() {
+    const id = durationEl.value;
+    if (/^h\d$/.test(id)) return { kind: 'hours', hours: Number(id.slice(1)) };
+    const pack = data.packages.find((p: any) => p.id === id);
+    return pack ? { kind: 'package', name: pack.name, from: pack.from, to: pack.to } : null;
   }
 
   function render() {
@@ -158,14 +175,10 @@ const durations = [
     $('bk-people').textContent = String(people);
     $('bk-together-wrap').hidden = people < 2;
     $('bk-to').textContent = `Pacman ${branch.name}`;
-    durationEl.options[0].textContent = unknownDurationLabel(people);
+    durationEl.options[0].textContent = people === 1 ? strings.unknownOne : strings.unknownMany;
     $('bk-adults').hidden = !isAdultsOnly(timeEl.value, durationEl.value);
 
-    const problem = !dateEl.value
-      ? 'Выбери дату'
-      : isPast(dateEl.value, timeEl.value)
-        ? 'Это время уже прошло. Выбери другое время или завтрашнюю дату.'
-        : '';
+    const problem = !dateEl.value ? strings.pickDate : isPast(dateEl.value, timeEl.value) ? strings.past : '';
     if (problem) {
       $('bk-error').textContent = problem;
       $('bk-message').textContent = '';
@@ -176,12 +189,13 @@ const durations = [
     $('bk-error').textContent = '';
 
     const text = buildMessage({
+      lang: data.lang,
       branchName: branch.name,
       date: dateEl.value,
       time: timeEl.value,
       people,
       zoneName: zone?.name,
-      duration: durationEl.value,
+      duration: duration(),
       together: togetherEl.checked,
       code,
     });
@@ -411,7 +425,7 @@ const durations = [
   }
 
   .bubble:empty::before {
-    content: 'Сообщение появится, когда выберешь дату и время.';
+    content: attr(data-placeholder);
     opacity: 0.6;
   }
 

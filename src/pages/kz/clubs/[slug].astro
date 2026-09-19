@@ -1,6 +1,6 @@
 ---
-import ClubPage from '../../views/ClubPage.astro';
-import { branches } from '../../lib/data.js';
+import ClubPage from '../../../views/ClubPage.astro';
+import { branches } from '../../../lib/data.js';
 
 export function getStaticPaths() {
   return branches.map((branch) => ({ params: { slug: branch.slug }, props: { branch } }));
@@ -9,4 +9,4 @@ export function getStaticPaths() {
 const { branch } = Astro.props;
 ---
 
-<ClubPage branch={branch} lang="ru" />
+<ClubPage branch={branch} lang="kk" />

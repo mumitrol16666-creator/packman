@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../lib/data.js';
+import { ui } from '../i18n/index.js';
+
+interface Props {
+  lang?: string;
+}
+const { lang = 'ru' } = Astro.props;
+const p = ui(lang).privacy;
+const metrika = Boolean(import.meta.env.PUBLIC_METRIKA_ID);
+const [before, handle, after] = p.questions(site.instagramHandle);
+---
+
+<Base title={p.title} description={p.description} lang={lang} pagePath="/privacy/">
+  <section class="section">
+    <div class="wrap page">
+      <span class="eyebrow">{p.eyebrow}</span>
+      <h1>{p.h1}</h1>
+
+      {p.sections.map(([heading, paragraphs]: [string, string[]], i: number) => (
+        <>
+          <h2>{heading}</h2>
+          {paragraphs.map((text) => <p>{text}</p>)}
+          {i === 2 && metrika && <p>{p.metrika}</p>}
+        </>
+      ))}
+
+      <h2>{p.questionsTitle}</h2>
+      <p>{before}<a href={site.instagram} target="_blank" rel="noopener">{handle}</a>{after}</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page {
+    max-width: 760px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .page h1 {
+    font-size: clamp(34px, 7vw, 56px);
+    margin-bottom: 8px;
+  }
+
+  .page h2 {
+    font-size: 24px;
+    margin-top: 18px;
+  }
+
+  .page p {
+    color: color-mix(in srgb, var(--snow) 86%, transparent);
+  }
+
+  .page a {
+    color: var(--yellow);
+  }
+</style>

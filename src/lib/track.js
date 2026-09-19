@@ -67,6 +67,7 @@ export function track(event, props = {}) {
     path: location.pathname.slice(base.length) || '/',
     session: sessionId(),
     device: device(),
+    lang: document.documentElement.lang || 'ru',
     ...attribution(),
     ...props,
   });

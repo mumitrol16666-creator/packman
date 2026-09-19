@@ -71,6 +71,7 @@ function body(stats, previous, previousLabel) {
 function extras(stats) {
   const lines = [];
   if (stats.sections.length) lines.push(`📖 Дошли до раздела: ${shares(stats.sections, 'section', SECTION_LABELS, stats.sessions, 6)}`);
+  if (stats.kazakhSessions) lines.push(`🌐 Казахская версия сайта: ${pct(stats.kazakhSessions, stats.sessions)} визитов`);
   if (stats.peakHours.length) lines.push(`⏰ Пик посещений: ${stats.peakHours.map((h) => `${String(h.hour).padStart(2, '0')}:00`).join(', ')}`);
   const best = [...stats.byDay].sort((a, b) => b.n - a.n)[0];
   if (best) lines.push(`📅 Лучший день: ${humanDay(best.day)}, визитов: ${num(best.n)}`);

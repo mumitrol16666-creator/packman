@@ -1,17 +1,24 @@
 ---
 import Base from '../layouts/Base.astro';
 import { branches } from '../lib/data.js';
+import { ui } from '../i18n/index.js';
 import { url } from '../lib/url.js';
+
+// Страница 404 одна на оба языка: сервер не знает, на каком языке искали страницу.
+const ru = ui('ru').notFound;
+const kk = ui('kk').notFound;
 ---
 
-<Base title="Страница не найдена — Pacman Game Center" description="Такой страницы нет. Выбери клуб Pacman в Актобе или вернись на главную.">
+<Base title={ru.title} description={ru.description} lang="ru" pagePath="/404/">
   <section class="section lost">
     <div class="wrap">
-      <span class="eyebrow">Ошибка 404</span>
-      <h1>Game over. Такой страницы нет</h1>
-      <p>Возможно, ссылка устарела. Выбери клуб или вернись на главную.</p>
+      <span class="eyebrow">{ru.eyebrow}</span>
+      <h1>{ru.h1}</h1>
+      <p>{ru.lead}</p>
+      <p lang="kk">{kk.lead}</p>
       <div class="lost__actions">
-        <a class="btn btn--primary" href={url('/')}>На главную</a>
+        <a class="btn btn--primary" href={url('/')}>{ru.home}</a>
+        <a class="btn btn--primary" href={url('/', 'kk')} lang="kk">{kk.home}</a>
         {branches.map((b) => <a class="btn" href={url(`/clubs/${b.slug}/`)}>{b.name}</a>)}
       </div>
     </div>

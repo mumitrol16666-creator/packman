@@ -1,21 +1,25 @@
 ---
 import { Image } from 'astro:assets';
 import Icon from './Icon.astro';
-import { formatPrice, maxHz, minHourPrice, photosOf, ratingCount, ratingValue, reviewsUrl } from '../lib/data.js';
+import { formatPrice, maxHz, minHourPrice, photosOf, ratingValue, reviewsUrl } from '../lib/data.js';
+import { loc, ui } from '../i18n/index.js';
 import { url } from '../lib/url.js';
 
 interface Props {
   branch: any;
   eager?: boolean;
+  lang?: string;
 }
-const { branch, eager = false } = Astro.props;
+const { branch, eager = false, lang = 'ru' } = Astro.props;
+const t = ui(lang);
 const cover = photosOf(branch.slug)[0];
 const topHz = Math.max(...branch.zones.map(maxHz));
 const hasPs = branch.consoles.length > 0;
+const clubUrl = url(`/clubs/${branch.slug}/`, lang);
 ---
 
 <article class="club" style={`--accent:${branch.accent}`} data-club={branch.slug} data-lat={branch.geo?.lat} data-lon={branch.geo?.lon}>
-  <a class="club__media" href={url(`/clubs/${branch.slug}/`)} tabindex="-1" aria-hidden="true">
+  <a class="club__media" href={clubUrl} tabindex="-1" aria-hidden="true">
     {cover ? (
       <Image
         src={cover}
@@ -33,27 +37,27 @@ const hasPs = branch.consoles.length > 0;
   <div class="club__body">
     <div class="club__title">
       <h3><span class="club__brand">Pacman</span> {branch.name}</h3>
-      <span class="club__from">от <b class="num">{formatPrice(minHourPrice(branch))}</b> ₸/час</span>
+      <span class="club__from">{t.fromParts.before}<b class="num">{formatPrice(minHourPrice(branch))}</b>{t.fromParts.after}</span>
     </div>
 
-    <p class="club__address"><Icon name="pin" />{branch.address}<span>{branch.district}<b class="club__distance" hidden></b></span></p>
+    <p class="club__address"><Icon name="pin" />{loc(branch, 'address', lang)}<span>{loc(branch, 'district', lang)}<b class="club__distance" hidden></b></span></p>
 
     {branch.rating && (
       <a class="club__rating" href={reviewsUrl(branch)} target="_blank" rel="noopener" data-track="reviews_2gis" data-branch={branch.slug}>
         <span class="club__star" aria-hidden="true">★</span><b>{ratingValue(branch.rating.value)}</b>
-        <span>{ratingCount(branch.rating.count)} в 2ГИС</span>
+        <span>{t.ratingIn2gis(t.ratingCount(branch.rating.count))}</span>
       </a>
     )}
 
     <div class="club__chips">
-      <span class="chip chip--accent">до {topHz} Гц</span>
-      {branch.zones.map((z: any) => <span class="chip">{z.name}</span>)}
+      <span class="chip chip--accent">{t.upToHz(topHz)}</span>
+      {branch.zones.map((z: any) => <span class="chip">{loc(z, 'name', lang)}</span>)}
       {hasPs && <span class="chip">PS5</span>}
     </div>
 
     <div class="club__actions">
-      <a class="btn btn--sm" href={url(`/clubs/${branch.slug}/`)} data-track="club_open" data-branch={branch.slug}>Цены и залы</a>
-      <a class="btn btn--sm btn--primary" href="#booking" data-book data-branch={branch.slug} data-track="club_book">Забронировать</a>
+      <a class="btn btn--sm" href={clubUrl} data-track="club_open" data-branch={branch.slug}>{t.card.open}</a>
+      <a class="btn btn--sm btn--primary" href="#booking" data-book data-branch={branch.slug} data-track="club_book">{t.book}</a>
     </div>
   </div>
 </article>

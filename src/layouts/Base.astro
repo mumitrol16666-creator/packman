@@ -5,25 +5,32 @@ import '../styles/global.css';
 import { Image } from 'astro:assets';
 import Icon from '../components/Icon.astro';
 import logo from '../assets/logo/lockup.png';
-import { branches, site } from '../lib/data.js';
-import { url } from '../lib/url.js';
+import { branches, site, upcomingEvents } from '../lib/data.js';
+import { LANGS, loc, ui } from '../i18n/index.js';
+import { asset, url } from '../lib/url.js';
 
 interface Props {
   title: string;
   description: string;
+  lang?: string;
+  /** Адрес страницы без языка и подпапки: '/', '/clubs/gold/'. Из него строятся ссылки на версии на других языках. */
+  pagePath: string;
   jsonLd?: object;
   ogImage?: string;
 }
-const { title, description, jsonLd, ogImage = '/og/home.jpg' } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site);
-const isHome = Astro.url.pathname === url('/');
-const home = isHome ? '' : url('/');
+const { title, description, lang = 'ru', pagePath, jsonLd, ogImage = '/og/home.jpg' } = Astro.props;
+const t = ui(lang);
+const canonical = new URL(url(pagePath, lang), Astro.site);
+const isHome = pagePath === '/';
+const home = isHome ? '' : url('/', lang);
+const otherLang = lang === 'kk' ? 'ru' : 'kk';
+const hasEvents = upcomingEvents().length > 0;
 const noindex = Boolean(import.meta.env.PUBLIC_NOINDEX);
 const metrikaId = Number(import.meta.env.PUBLIC_METRIKA_ID) || null;
 ---
 
 <!doctype html>
-<html lang="ru">
+<html lang={t.htmlLang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -31,19 +38,21 @@ const metrikaId = Number(import.meta.env.PUBLIC_METRIKA_ID) || null;
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {LANGS.map((code) => <link rel="alternate" hreflang={code} href={new URL(url(pagePath, code), Astro.site)} />)}
+    <link rel="alternate" hreflang="x-default" href={new URL(url(pagePath, 'ru'), Astro.site)} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:locale" content="ru_KZ" />
+    <meta property="og:locale" content={t.ogLocale} />
     <meta property="og:site_name" content={site.brand} />
-    <meta property="og:image" content={new URL(url(ogImage), Astro.site)} />
+    <meta property="og:image" content={new URL(asset(ogImage), Astro.site)} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
-    <link rel="icon" href={url('/favicon.png')} type="image/png" />
-    <link rel="apple-touch-icon" href={url('/favicon.png')} />
+    <link rel="icon" href={asset('/favicon.png')} type="image/png" />
+    <link rel="apple-touch-icon" href={asset('/favicon.png')} />
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
     {metrikaId && (
       <script is:inline define:vars={{ metrikaId }}>
@@ -59,29 +68,32 @@ const metrikaId = Number(import.meta.env.PUBLIC_METRIKA_ID) || null;
   <body>
     <header class="header">
       <div class="wrap header__inner">
-        <a class="header__logo" href={url('/')} aria-label={`${site.brand} — на главную`}>
+        <a class="header__logo" href={url('/', lang)} aria-label={`${site.brand} — ${t.nav.home}`}>
           <Image src={logo} alt={site.brand} width={172} densities={[1, 2, 3]} loading="eager" />
         </a>
-        <nav class="header__nav" aria-label="Разделы">
-          <a href={`${home}#clubs`}>Клубы</a>
-          <a href={`${home}#prices`}>Цены</a>
-          <a href={`${home}#promos`}>Акции</a>
-          <a href={`${home}#rules`}>Правила</a>
+        <nav class="header__nav" aria-label={t.nav.sections}>
+          <a href={`${home}#clubs`}>{t.nav.clubs}</a>
+          <a href={`${home}#prices`}>{t.nav.prices}</a>
+          {hasEvents && <a href={`${home}#events`}>{t.nav.events}</a>}
+          <a href={`${home}#promos`}>{t.nav.promos}</a>
+          <a href={`${home}#rules`}>{t.nav.rules}</a>
         </nav>
         <div class="header__right">
-          <a class="btn btn--sm btn--primary" href="#booking" data-book data-track="header_book">Забронировать</a>
+          <a class="lang" href={url(pagePath, otherLang)} hreflang={otherLang} lang={otherLang} title={t.switchTo.title} data-track="lang_switch">{t.switchTo.label}</a>
+          <a class="btn btn--sm btn--primary" href="#booking" data-book data-track="header_book">{t.book}</a>
           <details class="menu" id="menu">
-            <summary aria-label="Меню"><span aria-hidden="true"></span></summary>
-            <nav class="menu__panel" aria-label="Меню">
+            <summary aria-label={t.nav.menu}><span aria-hidden="true"></span></summary>
+            <nav class="menu__panel" aria-label={t.nav.menu}>
               <div class="wrap">
-                <a href={`${home}#clubs`}>Клубы</a>
-                <a href={`${home}#prices`}>Цены</a>
-                <a href={`${home}#promos`}>Акции</a>
-                <a href="#booking" data-book>Бронь</a>
-                <a href={`${home}#rules`}>Правила</a>
+                <a href={`${home}#clubs`}>{t.nav.clubs}</a>
+                <a href={`${home}#prices`}>{t.nav.prices}</a>
+                {hasEvents && <a href={`${home}#events`}>{t.nav.events}</a>}
+                <a href={`${home}#promos`}>{t.nav.promos}</a>
+                <a href="#booking" data-book>{t.nav.booking}</a>
+                <a href={`${home}#rules`}>{t.nav.rules}</a>
                 <ul class="menu__clubs">
                   {branches.map((b) => (
-                    <li><a href={url(`/clubs/${b.slug}/`)} style={`--accent:${b.accent}`}>{b.name}</a></li>
+                    <li><a href={url(`/clubs/${b.slug}/`, lang)} style={`--accent:${b.accent}`}>{b.name}</a></li>
                   ))}
                 </ul>
               </div>
@@ -105,15 +117,15 @@ const metrikaId = Number(import.meta.env.PUBLIC_METRIKA_ID) || null;
         <ul class="footer__clubs">
           {branches.map((b) => (
             <li>
-              <a href={url(`/clubs/${b.slug}/`)}>Pacman {b.name}</a>
-              <span>{b.address}</span>
+              <a href={url(`/clubs/${b.slug}/`, lang)}>Pacman {b.name}</a>
+              <span>{loc(b, 'address', lang)}</span>
             </li>
           ))}
         </ul>
       </div>
       <div class="wrap footer__legal">
-        <span>© {new Date().getFullYear()} {site.brand}, {site.city}</span>
-        <a href={url('/privacy/')}>Какие данные собирает сайт</a>
+        <span>© {new Date().getFullYear()} {site.brand}, {loc(site, 'city', lang)}</span>
+        <a href={url('/privacy/', lang)}>{t.footer.privacy}</a>
       </div>
     </footer>
 
@@ -183,6 +195,26 @@ const metrikaId = Number(import.meta.env.PUBLIC_METRIKA_ID) || null;
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .lang {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    height: 38px;
+    padding: 0 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    color: var(--snow);
+  }
+
+  .lang:hover {
+    border-color: var(--snow);
   }
 
   .menu summary {
@@ -289,12 +321,21 @@ const metrikaId = Number(import.meta.env.PUBLIC_METRIKA_ID) || null;
     text-decoration: none;
   }
 
-  @media (max-width: 359px) {
+  @media (max-width: 419px) {
     .header__logo img {
-      width: 100px;
+      width: 96px;
+    }
+    .header__right {
+      gap: 6px;
     }
     .header__right .btn {
       padding: 0 10px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+    .lang {
+      min-width: 40px;
+      padding: 0 6px;
     }
   }
 

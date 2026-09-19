@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildMessage, formatDate, isAdultsOnly, isPast, makeCode, plural, unknownDurationLabel, whatsappUrl } from '../src/lib/booking.js';
+import { buildMessage, formatDate, isAdultsOnly, isPast, makeCode, plural, whatsappUrl } from '../src/lib/booking.js';
+import { ui } from '../src/i18n/index.js';
 
 const branches = JSON.parse(readFileSync(new URL('../src/data/branches.json', import.meta.url)));
 
@@ -19,12 +20,13 @@ test('склонение слова «компьютер»', () => {
 test('дата с днём недели', () => {
   assert.equal(formatDate('2026-09-19'), '19 сентября (сб)');
   assert.equal(formatDate('2027-01-01'), '1 января (пт)');
+  assert.equal(formatDate('2026-09-21', 'kk'), '21 қыркүйек (дүйсенбі)');
 });
 
 test('сообщение для компании', () => {
   const text = buildMessage({
     branchName: 'Premium', date: '2026-09-19', time: '21:00', people: 3,
-    zoneName: 'VIP Varmilo', duration: 'на 3 часа', together: true, code: 'A7K2',
+    zoneName: 'VIP Varmilo', duration: { kind: 'hours', hours: 3 }, together: true, code: 'A7K2',
   });
   assert.equal(
     text,
@@ -39,10 +41,39 @@ test('сообщение для одного: «хочу», без «мест р
   assert.doesNotMatch(text, /Зона/);
 });
 
-test('«не знаю» для одного, «не знаем» для компании', () => {
-  assert.equal(unknownDurationLabel(1), 'Пока не знаю');
-  assert.equal(unknownDurationLabel(2), 'Пока не знаем');
-  assert.equal(unknownDurationLabel(20), 'Пока не знаем');
+test('пакет и длительность в русском сообщении', () => {
+  const base = { branchName: 'Pro', date: '2026-09-19', time: '23:00', people: 5, code: 'A7K2' };
+  assert.match(buildMessage({ ...base, duration: { kind: 'package', name: 'Ночь', from: '23:00', to: '08:00' } }), /5 компьютеров .* в 23:00, пакет «Ночь»\./);
+  assert.match(buildMessage({ ...base, duration: { kind: 'hours', hours: 1 } }), /, на 1 час\./);
+  assert.match(buildMessage({ ...base, duration: { kind: 'hours', hours: 5 } }), /, на 5 часов\./);
+  assert.match(buildMessage({ ...base, duration: null }), /в 23:00\.\n\nЗаявка/);
+});
+
+test('казахское сообщение: данные списком, «брондағым» для одного', () => {
+  const text = buildMessage({
+    lang: 'kk', branchName: 'Premium', date: '2026-09-19', time: '21:00', people: 3,
+    zoneName: 'VIP Varmilo', duration: { kind: 'package', name: 'Түн', from: '23:00', to: '08:00' }, together: true, code: 'A7K2',
+  });
+  assert.equal(
+    text,
+    'Сәлеметсіз бе! Pacman Premium клубында орын брондағымыз келеді.\nКүні: 19 қыркүйек (сенбі)\nУақыты: 21:00\nКомпьютер саны: 3\nПакет: Түн, 23:00–08:00\nАймақ: VIP Varmilo\nОрындар қатар болса екен.\n\nСайттан өтінім #A7K2',
+  );
+  const solo = buildMessage({ lang: 'kk', branchName: 'Gold', date: '2026-09-20', time: '10:30', people: 1, together: true, duration: { kind: 'hours', hours: 3 }, code: 'ZZZZ' });
+  assert.match(solo, /брондағым келеді/);
+  assert.match(solo, /Ұзақтығы: 3 сағат/);
+  assert.doesNotMatch(solo, /қатар/);
+});
+
+test('словари двух языков совпадают по структуре', () => {
+  const shape = (value) => {
+    if (typeof value === 'function') return 'fn';
+    if (Array.isArray(value)) return value.map(shape);
+    if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map((k) => [k, shape(value[k])]));
+    return typeof value;
+  };
+  assert.deepEqual(shape(ui('kk')), shape(ui('ru')));
+  assert.equal(ui('ru').booking.unknownOne, 'Пока не знаю');
+  assert.equal(ui('ru').booking.unknownMany, 'Пока не знаем');
 });
 
 test('ночное время и ночные пакеты — только 18+', () => {
@@ -51,9 +82,10 @@ test('ночное время и ночные пакеты — только 18+'
   assert.equal(isAdultsOnly('03:00'), true);
   assert.equal(isAdultsOnly('07:30'), true);
   assert.equal(isAdultsOnly('08:00'), false);
-  assert.equal(isAdultsOnly('20:00', 'пакет «Ночь»'), true);
-  assert.equal(isAdultsOnly('20:00', 'пакет «Турбо ночь»'), true);
-  assert.equal(isAdultsOnly('12:00', 'пакет «День»'), false);
+  assert.equal(isAdultsOnly('20:00', 'night'), true);
+  assert.equal(isAdultsOnly('20:00', 'turbo'), true);
+  assert.equal(isAdultsOnly('12:00', 'day'), false);
+  assert.equal(isAdultsOnly('12:00', 'h5'), false);
 });
 
 test('прошедшее время определяется с запасом в 5 минут', () => {

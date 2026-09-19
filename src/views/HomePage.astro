@@ -1,0 +1,500 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import BranchCard from '../components/BranchCard.astro';
+import BranchPrices from '../components/BranchPrices.astro';
+import BookingForm from '../components/BookingForm.astro';
+import Events from '../components/Events.astro';
+import Promos from '../components/Promos.astro';
+import { branches, formatPrice, maxHz, minHourPrice, networkRating, photosOf, ratingValue, site } from '../lib/data.js';
+import { loc, ui } from '../i18n/index.js';
+import { asset, url } from '../lib/url.js';
+
+interface Props {
+  lang?: string;
+}
+const { lang = 'ru' } = Astro.props;
+const t = ui(lang);
+const h = t.home;
+
+const heroPhoto = photosOf('batys')[0] ?? branches.map((b) => photosOf(b.slug)[0]).find(Boolean);
+const topHz = Math.max(...branches.flatMap((b) => b.zones.map(maxHz)));
+const fromPrice = Math.min(...branches.map(minHourPrice));
+const rating = networkRating();
+const trust = h.trust(ratingValue(rating.value), t.ratingCount(rating.count));
+
+const stats = [
+  { value: String(branches.length), label: h.stats.clubs },
+  { value: '24/7', label: h.stats.nonstop },
+  { value: `${topHz}`, unit: 'Гц', label: h.stats.hz },
+  { value: formatPrice(fromPrice), unit: '₸', label: h.stats.price },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: site.brand,
+  url: new URL(url('/', lang), Astro.site),
+  logo: new URL(asset('/favicon.png'), Astro.site),
+  sameAs: [site.instagram],
+};
+
+const nearestStrings = JSON.stringify(t.nearest);
+---
+
+<Base title={h.title(branches.length)} description={h.description(branches.length, topHz, fromPrice)} lang={lang} pagePath="/" jsonLd={jsonLd}>
+  <section class="hero">
+    {heroPhoto && (
+      <Image class="hero__bg" src={heroPhoto} alt="" widths={[640, 960, 1440]} sizes="100vw" loading="eager" fetchpriority="high" quality={60} />
+    )}
+    <div class="wrap hero__inner">
+      <span class="eyebrow">{h.eyebrow(loc(site, 'city', lang))}</span>
+      <h1>{h.h1}</h1>
+      <p class="hero__lead">{h.lead(topHz)}</p>
+      <p class="hero__trust">
+        <span aria-hidden="true">★</span> {trust.before}<b>{trust.value}</b>{trust.after}
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="#booking" data-book data-track="hero_book">{t.book}</a>
+        <a class="btn" href="#clubs" data-track="hero_clubs">{h.chooseClub}</a>
+      </div>
+      <dl class="hero__stats">
+        {stats.map((s) => (
+          <div>
+            <dt>{s.label}</dt>
+            <dd class="num">{s.value}{s.unit && <small>{s.unit}</small>}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <section class="section" id="clubs">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">{h.clubsEyebrow}</span>
+        <h2>{h.clubsTitle(branches.length)}</h2>
+        <p>{h.clubsLead}</p>
+        <div class="nearest">
+          <button class="btn btn--sm" type="button" id="nearest-btn" data-track="nearest_club" data-strings={nearestStrings}>{h.nearest}</button>
+          <span class="nearest__status" id="nearest-status" role="status"></span>
+        </div>
+      </div>
+      <div class="clubs" id="clubs-list">
+        {branches.map((b, i) => <BranchCard branch={b} eager={i < 2} lang={lang} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt" id="prices">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">{h.pricesEyebrow}</span>
+        <h2>{h.pricesTitle}</h2>
+        <p>{h.pricesLead(t.date(site.pricesUpdated))}</p>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label={h.clubTabs}>
+        {branches.map((b, i) => (
+          <button class="tab" role="tab" type="button" id={`tab-${b.slug}`} aria-controls={`panel-${b.slug}`} aria-selected={i === 0 ? 'true' : 'false'} style={`--accent:${b.accent}`} data-track="prices_tab" data-branch={b.slug}>
+            {b.name}
+          </button>
+        ))}
+      </div>
+
+      {branches.map((b) => (
+        <div class="panel" role="tabpanel" id={`panel-${b.slug}`} aria-labelledby={`tab-${b.slug}`}>
+          <h3 class="panel__title" style={`--accent:${b.accent}`}>Pacman {b.name} <span>{loc(b, 'address', lang)}</span></h3>
+          <BranchPrices branch={b} lang={lang} />
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <Events lang={lang} />
+
+  <section class="section" id="promos">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">{h.promosEyebrow}</span>
+        <h2>{h.promosTitle}</h2>
+      </div>
+      <Promos lang={lang} />
+    </div>
+  </section>
+
+  <section class="section section--alt" id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">{h.featuresEyebrow}</span>
+        <h2>{h.featuresTitle}</h2>
+      </div>
+      <ol class="features">
+        {site.features.map((f: any, i: number) => (
+          <li>
+            <span class="features__n num">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{loc(f, 'title', lang)}</h3>
+            <p>{loc(f, 'text', lang)}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <BookingForm lang={lang} />
+
+  <section class="section" id="rules">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">{h.rulesEyebrow}</span>
+        <h2>{h.rulesTitle}</h2>
+      </div>
+      <ol class="rules__list">
+        {loc(site, 'rules', lang).map((rule: string) => <li>{rule}</li>)}
+      </ol>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Ближайший клуб считается прямо в браузере: координаты посетителя никуда не отправляются.
+  const nearestBtn = document.getElementById('nearest-btn') as HTMLButtonElement;
+  const nearestStatus = document.getElementById('nearest-status')!;
+  const list = document.getElementById('clubs-list')!;
+  const text = JSON.parse(nearestBtn.dataset.strings!);
+
+  function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const rad = Math.PI / 180;
+    const a = Math.sin(((lat2 - lat1) * rad) / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(((lon2 - lon1) * rad) / 2) ** 2;
+    return 6371 * 2 * Math.asin(Math.sqrt(a));
+  }
+
+  if (!('geolocation' in navigator)) nearestBtn.hidden = true;
+
+  nearestBtn.addEventListener('click', () => {
+    nearestStatus.textContent = text.locating;
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const cards = [...list.querySelectorAll<HTMLElement>('[data-club]')]
+          .filter((card) => card.dataset.lat && card.dataset.lon)
+          .map((card) => ({ card, km: distanceKm(coords.latitude, coords.longitude, Number(card.dataset.lat), Number(card.dataset.lon)) }))
+          .sort((a, b) => a.km - b.km);
+        for (const { card, km } of cards) {
+          const label = card.querySelector<HTMLElement>('.club__distance')!;
+          label.textContent = km < 1 ? text.meters.replace('{n}', String(Math.round(km * 100) * 10)) : text.km.replace('{n}', km.toFixed(1).replace('.', ','));
+          label.hidden = false;
+          list.append(card);
+        }
+        nearestStatus.textContent = cards[0].km > 100 ? text.far : text.sorted;
+      },
+      () => {
+        nearestStatus.textContent = text.failed;
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+    );
+  });
+
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('.tab')];
+  const panels = [...document.querySelectorAll<HTMLElement>('.panel')];
+
+  function select(slug: string, focus = false) {
+    for (const tab of tabs) {
+      const on = tab.id === `tab-${slug}`;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      if (on && focus) tab.focus();
+      if (on) tab.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    }
+    for (const panel of panels) panel.hidden = panel.id !== `panel-${slug}`;
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab.id.replace('tab-', '')));
+    tab.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+      select(next.id.replace('tab-', ''), true);
+    });
+  });
+
+  document.documentElement.classList.add('js-tabs');
+  for (const panel of panels) panel.hidden = panel !== panels[0];
+  tabs.forEach((tab, i) => (tab.tabIndex = i === 0 ? 0 : -1));
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hero :global(.hero__bg) {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 35%;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(180deg, rgba(7, 9, 12, 0.35) 0%, rgba(7, 9, 12, 0.55) 50%, var(--carbon) 100%),
+      linear-gradient(90deg, rgba(7, 9, 12, 0.8) 0%, rgba(7, 9, 12, 0.1) 100%);
+  }
+
+  .hero__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+    padding-block: 56px 40px;
+  }
+
+  .hero h1 {
+    font-size: clamp(44px, 11vw, 96px);
+    font-weight: 700;
+    max-width: 12ch;
+  }
+
+  .hero__lead {
+    max-width: 52ch;
+    font-size: 17px;
+    color: color-mix(in srgb, var(--snow) 86%, transparent);
+  }
+
+  .hero__trust {
+    font-size: 15px;
+    color: color-mix(in srgb, var(--snow) 80%, transparent);
+  }
+
+  .hero__trust span {
+    color: var(--yellow);
+  }
+
+  .hero__trust b {
+    font-family: var(--font-display);
+    font-size: 19px;
+    color: var(--snow);
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .hero__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    width: 100%;
+    margin: 18px 0 0;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .hero__stats div {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2px;
+    padding: 14px 16px;
+    background: color-mix(in srgb, var(--carbon) 82%, transparent);
+    backdrop-filter: blur(6px);
+  }
+
+  .hero__stats dt {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .hero__stats dd {
+    margin: 0;
+    font-size: 34px;
+    line-height: 1;
+    color: var(--yellow);
+  }
+
+  .hero__stats small {
+    margin-left: 4px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  @media (min-width: 800px) {
+    .hero__inner {
+      padding-block: 96px 56px;
+    }
+    .hero__stats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      max-width: 820px;
+    }
+  }
+
+  .section--alt {
+    background: #0b0d11;
+    border-block: 1px solid var(--line);
+  }
+
+  .nearest {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin-top: 6px;
+  }
+
+  .nearest__status {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .clubs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: 16px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin: 0 calc(var(--gutter) * -1) 20px;
+    padding: 2px var(--gutter) 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  :global(html:not(.js-tabs)) .tabs {
+    display: none;
+  }
+
+  .tab {
+    flex: none;
+    min-height: 42px;
+    padding: 0 18px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--snow);
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .tab[aria-selected='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--carbon);
+  }
+
+  .panel[hidden] {
+    display: none;
+  }
+
+  .panel + .panel {
+    margin-top: 40px;
+  }
+
+  :global(html.js-tabs) .panel + .panel {
+    margin-top: 0;
+  }
+
+  .panel__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    margin-bottom: 16px;
+    font-size: 24px;
+    color: var(--accent-text);
+  }
+
+  .panel__title span {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--muted);
+  }
+
+  .features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .features li {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px 18px 22px;
+    background: var(--panel);
+  }
+
+  .features__n {
+    font-size: 15px;
+    color: var(--yellow);
+  }
+
+  .features h3 {
+    font-size: 21px;
+  }
+
+  .features p {
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  .rules__list {
+    max-width: 820px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: rule;
+    display: grid;
+    gap: 12px;
+  }
+
+  .rules__list li {
+    counter-increment: rule;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    color: color-mix(in srgb, var(--snow) 88%, transparent);
+  }
+
+  .rules__list li::before {
+    content: counter(rule);
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--yellow);
+    line-height: 1.15;
+  }
+</style>

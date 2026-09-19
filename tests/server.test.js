@@ -65,9 +65,27 @@ test('событие нормализуется, а IP в строку не по
   assert.equal('extra' in row, false);
 });
 
-test('клуб берётся из адреса страницы, если не передан явно', () => {
+test('клуб и язык берутся из адреса страницы, если не переданы явно', () => {
   const row = normalizeEvent({ event: 'pageview', path: '/clubs/batys/', session: 'abcd1234-ef' }, ctx(1));
   assert.equal(row.branch, 'batys');
+  assert.equal(row.lang, 'ru');
+  const kz = normalizeEvent({ event: 'pageview', path: '/kz/clubs/gold/', session: 'abcd1234-ef' }, ctx(1));
+  assert.equal(kz.branch, 'gold');
+  assert.equal(kz.lang, 'kk');
+});
+
+test('старая база без колонки lang дополняется при открытии', async () => {
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { DatabaseSync } = await import('node:sqlite');
+  const file = join(mkdtempSync(join(tmpdir(), 'pacman-db-')), 'old.db');
+  const old = new DatabaseSync(file);
+  old.exec('CREATE TABLE events (id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, day TEXT NOT NULL, hour INTEGER NOT NULL, event TEXT NOT NULL, path TEXT NOT NULL, visitor TEXT NOT NULL, session TEXT NOT NULL, device TEXT, source TEXT, campaign TEXT, branch TEXT, zone TEXT, section TEXT, value INTEGER, code TEXT)');
+  old.close();
+  const db = openDb(file);
+  assert.ok(db.prepare('PRAGMA table_info(events)').all().some((c) => c.name === 'lang'));
+  db.close();
 });
 
 test('обезличенный код посетителя одинаков в пределах дня и меняется на следующий', () => {
@@ -96,7 +114,7 @@ test('ограничение частоты: 121-е событие за мину
 function seed(db) {
   let n = 0;
   const add = (day, session, patch) =>
-    insertEvent(db, { ts: Date.parse(`${day}T10:00:00Z`) + n++, day, hour: 15, event: 'pageview', path: '/', visitor: `v-${session}`, session, device: 'mobile', source: 'instagram', campaign: null, branch: null, zone: null, section: null, value: null, code: null, ...patch });
+    insertEvent(db, { ts: Date.parse(`${day}T10:00:00Z`) + n++, day, hour: 15, event: 'pageview', path: '/', visitor: `v-${session}`, session, device: 'mobile', source: 'instagram', lang: 'ru', campaign: null, branch: null, zone: null, section: null, value: null, code: null, ...patch });
 
   // пятница 18 сентября: три визита, две заявки
   add('2026-09-18', 's1', {});

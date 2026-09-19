@@ -13,7 +13,7 @@ export function collectStats(db, from, to) {
   const range = 'day BETWEEN ? AND ?';
 
   // первый по времени ряд каждого визита: из него берутся источник, устройство и час прихода
-  const firstOfSession = `SELECT session, source, device, hour, day, MIN(ts) AS first_ts FROM events WHERE ${range} GROUP BY session`;
+  const firstOfSession = `SELECT session, source, device, hour, day, lang, MIN(ts) AS first_ts FROM events WHERE ${range} GROUP BY session`;
 
   const sessions = one(`SELECT COUNT(DISTINCT session) AS n FROM events WHERE ${range}`, from, to).n;
   const bookingSessions = one(`SELECT COUNT(DISTINCT session) AS n FROM events WHERE ${range} AND event = 'booking_whatsapp'`, from, to).n;
@@ -47,9 +47,10 @@ export function collectStats(db, from, to) {
     sources: all(`SELECT source, COUNT(*) AS n FROM (${firstOfSession}) GROUP BY source ORDER BY n DESC, source`, from, to),
     devices: all(`SELECT device, COUNT(*) AS n FROM (${firstOfSession}) WHERE device IS NOT NULL GROUP BY device ORDER BY n DESC`, from, to),
     peakHours: all(`SELECT hour, COUNT(*) AS n FROM (${firstOfSession}) GROUP BY hour ORDER BY n DESC, hour LIMIT 3`, from, to),
+    kazakhSessions: one(`SELECT COUNT(*) AS n FROM (${firstOfSession}) WHERE lang = 'kk'`, from, to).n,
     byDay: all(`SELECT day, COUNT(*) AS n FROM (${firstOfSession}) GROUP BY day ORDER BY day`, from, to),
     clubViews: all(
-      `SELECT branch, COUNT(*) AS n FROM events WHERE ${range} AND event = 'pageview' AND path LIKE '/clubs/%' AND branch IS NOT NULL GROUP BY branch ORDER BY n DESC, branch`,
+      `SELECT branch, COUNT(*) AS n FROM events WHERE ${range} AND event = 'pageview' AND (path LIKE '/clubs/%' OR path LIKE '/kz/clubs/%') AND branch IS NOT NULL GROUP BY branch ORDER BY n DESC, branch`,
       from,
       to,
     ),

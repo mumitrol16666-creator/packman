@@ -1,8 +1,24 @@
-import branches from '../data/branches.json';
+import allBranches from '../data/branches.json';
 import site from '../data/site.json';
-import { plural } from './booking.js';
+import allEvents from '../data/events.json';
+
+/** Клуб можно скрыть из админки (hidden: true), не удаляя его данные. */
+const branches = allBranches.filter((b) => !b.hidden);
 
 export { branches, site };
+
+const eventImages = import.meta.glob('/src/assets/events/*/*.{jpg,jpeg,png,webp}', { eager: true });
+
+/** Предстоящие и идущие события: прошедшие скрываются сами на следующий день после даты окончания. */
+export function upcomingEvents(today = new Date().toISOString().slice(0, 10)) {
+  return allEvents
+    .filter((e) => !e.hidden && (e.dateEnd || e.date) >= today)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((e) => ({
+      ...e,
+      image: Object.entries(eventImages).filter(([path]) => path.includes(`/events/${e.id}/`)).sort(([a], [b]) => a.localeCompare(b)).map(([, mod]) => mod.default)[0] || null,
+    }));
+}
 
 const photoModules = import.meta.glob('/src/assets/photos/*/*.{jpg,jpeg,png,webp}', { eager: true });
 
@@ -34,10 +50,6 @@ export function reviewsUrl(branch) {
 
 export function ratingValue(value) {
   return value.toFixed(1).replace('.', ',');
-}
-
-export function ratingCount(count) {
-  return `${formatPrice(count)} ${plural(count, 'оценка', 'оценки', 'оценок')}`;
 }
 
 /** Средний рейтинг сети, взвешенный по числу оценок в каждом клубе. */

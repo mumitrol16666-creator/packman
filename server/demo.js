@@ -37,7 +37,7 @@ export function seedDemo(db, lastDay, days = 45, seed = 7) {
       const ts = Date.parse(`${day}T00:00:00Z`) + hour * 3600_000 + Math.floor(rand() * 3600_000);
       const base = {
         ts, day, hour, path: '/', visitor: `v${day}${Math.floor(rand() * sessions * 0.9)}`, session: `s-${day}-${n}`,
-        device: rand() < 0.9 ? 'mobile' : 'desktop', source: pick(SOURCES), campaign: null, branch: null, zone: null, section: null, value: null, code: null,
+        device: rand() < 0.9 ? 'mobile' : 'desktop', source: pick(SOURCES), lang: rand() < 0.18 ? 'kk' : 'ru', campaign: null, branch: null, zone: null, section: null, value: null, code: null,
       };
       const add = (patch) => insertEvent(db, { ...base, ...patch, ts: base.ts + Math.floor(rand() * 60_000) });
 

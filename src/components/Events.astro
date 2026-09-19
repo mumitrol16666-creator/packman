@@ -1,0 +1,133 @@
+---
+import { Image } from 'astro:assets';
+import { branches, upcomingEvents } from '../lib/data.js';
+import { loc, ui } from '../i18n/index.js';
+
+interface Props {
+  lang?: string;
+  branch?: string;
+}
+const { lang = 'ru', branch } = Astro.props;
+const t = ui(lang);
+// на странице клуба показываются его события и общие для всей сети
+const events = upcomingEvents().filter((e: any) => !branch || !e.branch || e.branch === branch);
+
+const when = (e: any) => {
+  const sameMonth = e.dateEnd && e.dateEnd.slice(0, 7) === e.date.slice(0, 7);
+  const days = !e.dateEnd || e.dateEnd === e.date
+    ? t.dateShort(e.date)
+    : sameMonth
+      ? `${Number(e.date.slice(8))}–${t.dateShort(e.dateEnd)}`
+      : `${t.dateShort(e.date)} – ${t.dateShort(e.dateEnd)}`;
+  return e.time ? `${days}, ${e.time}` : days;
+};
+---
+
+{events.length > 0 && (
+  <section class="section" id="events">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">{t.home.eventsEyebrow}</span>
+        <h2>{t.home.eventsTitle}</h2>
+      </div>
+      <div class="events">
+        {events.map((e: any) => {
+          const club = branches.find((b) => b.slug === e.branch);
+          return (
+            <article class="event" style={`--accent:${club?.accent ?? '#fff200'}`}>
+              {e.image && <Image class="event__image" src={e.image} alt="" widths={[480, 800]} sizes="(min-width: 700px) 360px, 100vw" quality={72} />}
+              <div class="event__body">
+                <p class="event__when">{when(e)}</p>
+                <h3>{loc(e, 'title', lang)}</h3>
+                <p class="event__club">{club ? `Pacman ${club.name}` : t.events.allClubs}</p>
+                {loc(e, 'description', lang) && <p class="event__text">{loc(e, 'description', lang)}</p>}
+                {loc(e, 'prize', lang) && <p class="event__prize"><span>{t.events.prize}</span> {loc(e, 'prize', lang)}</p>}
+                <div class="event__actions">
+                  {club && <a class="btn btn--sm btn--primary" href={`https://wa.me/${club.whatsapp}`} target="_blank" rel="noopener" data-track="event_join" data-branch={club.slug}>{t.events.join}</a>}
+                  {e.link && <a class="btn btn--sm" href={e.link} target="_blank" rel="noopener" data-track="event_details">{t.events.details}</a>}
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  .events {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: 16px;
+  }
+
+  .event {
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--accent);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .event :global(.event__image) {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .event__body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    flex: 1;
+  }
+
+  .event__when {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+
+  .event h3 {
+    font-size: 26px;
+  }
+
+  .event__club {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .event__text {
+    font-size: 15px;
+    color: color-mix(in srgb, var(--snow) 86%, transparent);
+  }
+
+  .event__prize {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .event__prize span {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .event__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 8px;
+  }
+</style>

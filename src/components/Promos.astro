@@ -1,22 +1,30 @@
 ---
 import { formatPrice, site } from '../lib/data.js';
+import { loc } from '../i18n/index.js';
+
+interface Props {
+  lang?: string;
+}
+const { lang = 'ru' } = Astro.props;
 ---
 
 <div class="promos">
-  {site.promos.map((promo) => (
+  {site.promos.filter((promo: any) => !promo.hidden).map((promo: any) => (
     <article class="promo" style={`--accent:${promo.color}`}>
       <div class="promo__text">
-        <p class="promo__audience">{promo.audience}</p>
-        <h3>{promo.title}</h3>
-        <p class="promo__note">{promo.note}</p>
+        <p class="promo__audience">{loc(promo, 'audience', lang)}</p>
+        <h3>{loc(promo, 'title', lang)}</h3>
+        <p class="promo__note">{loc(promo, 'note', lang)}</p>
       </div>
-      <div class="promo__badge num">
-        {promo.price ? (
-          <>{formatPrice(promo.price)}<small>{promo.unit}</small></>
-        ) : (
-          promo.badge
-        )}
-      </div>
+      {(promo.price || promo.badge) && (
+        <div class="promo__badge num">
+          {promo.price ? (
+            <>{formatPrice(promo.price)}<small>{loc(promo, 'unit', lang)}</small></>
+          ) : (
+            loc(promo, 'badge', lang)
+          )}
+        </div>
+      )}
     </article>
   ))}
 </div>

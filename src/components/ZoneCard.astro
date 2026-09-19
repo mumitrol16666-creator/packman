@@ -1,28 +1,32 @@
 ---
 import { formatPrice, site } from '../lib/data.js';
+import { loc, ui } from '../i18n/index.js';
 
 interface Props {
   zone: any;
   branchSlug: string;
+  lang?: string;
 }
-const { zone, branchSlug } = Astro.props;
+const { zone, branchSlug, lang = 'ru' } = Astro.props;
+const t = ui(lang);
 const p = zone.prices;
+const zoneName = loc(zone, 'name', lang);
 
 const hourly = [
-  { label: '1 час', value: p.h1, perHour: null },
-  { label: '3 часа', value: p.h3, perHour: Math.round(p.h3 / 3) },
-  { label: '5 часов', value: p.h5, perHour: Math.round(p.h5 / 5) },
+  { label: t.zone.hours[0], value: p.h1, perHour: null },
+  { label: t.zone.hours[1], value: p.h3, perHour: Math.round(p.h3 / 3) },
+  { label: t.zone.hours[2], value: p.h5, perHour: Math.round(p.h5 / 5) },
 ];
 
 const specRows = [
-  ['Монитор', zone.specs.monitor.join(' или ')],
-  ['Процессор', zone.specs.cpu],
-  ['Видеокарта', zone.specs.gpu],
-  ['Память', zone.specs.ram],
-  ['Мышь', zone.specs.mouse],
-  ['Клавиатура', zone.specs.keyboard],
-  ['Наушники', zone.specs.headset],
-  ['Коврик', zone.specs.mousepad],
+  [t.zone.specs.monitor, zone.specs.monitor.join(t.zone.or)],
+  [t.zone.specs.cpu, zone.specs.cpu],
+  [t.zone.specs.gpu, zone.specs.gpu],
+  [t.zone.specs.ram, zone.specs.ram],
+  [t.zone.specs.mouse, zone.specs.mouse],
+  [t.zone.specs.keyboard, zone.specs.keyboard],
+  [t.zone.specs.headset, zone.specs.headset],
+  [t.zone.specs.mousepad, zone.specs.mousepad],
 ].filter(([, v]) => v);
 
 const gpuShort = zone.specs.gpu.replace('GeForce ', '');
@@ -32,10 +36,10 @@ const cpuShort = zone.specs.cpu.replace('Intel Core ', '').replace('AMD ', '');
 <article class="zone" id={`${branchSlug}-${zone.id}`}>
   <header class="zone__head">
     <div>
-      <h3>{zone.name}</h3>
+      <h3>{zoneName}</h3>
       <p class="zone__hz">{zone.hz}</p>
     </div>
-    {zone.pcs && <span class="chip chip--accent">{zone.pcs} ПК</span>}
+    {zone.pcs && <span class="chip chip--accent">{t.pcs(zone.pcs)}</span>}
   </header>
 
   <div class="zone__chips">
@@ -49,7 +53,7 @@ const cpuShort = zone.specs.cpu.replace('Intel Core ', '').replace('AMD ', '');
       <div class="tile">
         <span class="tile__label">{h.label}</span>
         <span class="tile__value num">{formatPrice(h.value)}<span class="cur">₸</span></span>
-        <span class="tile__per">{h.perHour ? `${formatPrice(h.perHour)} ₸/час` : 'без пакета'}</span>
+        <span class="tile__per">{h.perHour ? `${formatPrice(h.perHour)} ${t.perHour}` : t.zone.noPackage}</span>
       </div>
     ))}
   </div>
@@ -57,16 +61,16 @@ const cpuShort = zone.specs.cpu.replace('Intel Core ', '').replace('AMD ', '');
   <ul class="zone__packs">
     {site.packages.map((pack) => (
       <li class="pack" data-from={pack.from} data-to={pack.to}>
-        <span class="pack__name">{pack.name}</span>
+        <span class="pack__name">{loc(pack, 'name', lang)}</span>
         <span class="pack__time">{pack.from}–{pack.to}</span>
-        <span class="pack__now">идёт сейчас</span>
+        <span class="pack__now">{t.zone.now}</span>
         <span class="pack__price num">{formatPrice(p[pack.id])}<span class="cur">₸</span></span>
       </li>
     ))}
   </ul>
 
   <details class="zone__specs">
-    <summary>Всё железо и периферия</summary>
+    <summary>{t.zone.allSpecs}</summary>
     <dl>
       {specRows.map(([k, v]) => (
         <div><dt>{k}</dt><dd>{v}</dd></div>
@@ -75,7 +79,7 @@ const cpuShort = zone.specs.cpu.replace('Intel Core ', '').replace('AMD ', '');
   </details>
 
   <a class="btn btn--sm zone__book" href="#booking" data-book data-branch={branchSlug} data-zone={zone.id} data-track="zone_book">
-    Забронировать {zone.name}
+    {t.zone.book(zoneName)}
   </a>
 </article>
 
