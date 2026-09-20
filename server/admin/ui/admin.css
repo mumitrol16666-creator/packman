@@ -473,8 +473,12 @@ td input {
 
 .savebar span {
   margin-right: auto;
-  color: var(--yellow);
+  color: var(--muted);
   font-weight: 600;
+}
+
+.savebar[data-dirty='true'] span {
+  color: var(--yellow);
 }
 
 .dialog {

@@ -34,9 +34,19 @@ function h(tag, attrs = {}, ...children) {
   return el;
 }
 
+/** Панель сохранения видна всегда: без правок кнопки неактивны, с правками — подсвечена. */
+function syncSavebar() {
+  const dirty = state.dirty.size > 0;
+  $('savebar').hidden = false;
+  $('savebar').dataset.dirty = String(dirty);
+  $('savebar-text').textContent = dirty ? 'Есть несохранённые изменения' : 'Все изменения сохранены';
+  $('save').disabled = !dirty;
+  $('discard').disabled = !dirty;
+}
+
 function touch(name) {
   state.dirty.add(name);
-  $('savebar').hidden = false;
+  syncSavebar();
 }
 
 /** Поле, привязанное к свойству объекта. Пустая строка сохраняется как отсутствие значения. */
@@ -413,8 +423,7 @@ async function save() {
       problems.push(...(result.data.errors || [result.data.error || 'Не удалось сохранить']));
     }
   }
-  $('save').disabled = false;
-  $('savebar').hidden = state.dirty.size === 0;
+  syncSavebar();
   if (problems.length) showDialog('Не всё сохранилось', h('ul', {}, problems.map((text) => h('li', {}, text))));
   else watchBuild();
   render();
@@ -424,7 +433,7 @@ function discard() {
   if (!confirm('Отменить все несохранённые изменения?')) return;
   state.content = structuredClone(state.saved);
   state.dirty.clear();
-  $('savebar').hidden = true;
+  syncSavebar();
   render();
 }
 
@@ -466,6 +475,7 @@ async function start() {
   setBuild(result.data.build);
   $('login').hidden = true;
   $('app').hidden = false;
+  syncSavebar();
   render();
   if (result.data.build.status === 'building') watchBuild();
 }
